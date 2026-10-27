@@ -1,0 +1,1269 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Job Tracker Prototype</title>
+<style>
+:root{
+  --blue:#0a66c2; --blue-d:#004182; --blue-l:#e8f1fb;
+  --bg:#f4f2ee; --card:#fff; --line:#e8e8e8;
+  --t1:rgba(0,0,0,.9); --t2:rgba(0,0,0,.6); --t3:rgba(0,0,0,.45);
+  --green:#01754f; --green-l:#e6f4ea;
+  --gold:#915907; --gold-l:#fcf0dc; --gold-b:#f8c77e; --gold-ic:#e7a33e;
+  --purple:#7a3eb1; --purple-l:#f3ecfa;
+  --red:#cb112d;
+  --shadow:0 0 0 1px rgba(140,140,140,.2);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--t1);font:14px/1.42857 -apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","Fira Sans",Ubuntu,Oxygen,"Oxygen Sans",Cantarell,"Droid Sans","Apple Color Emoji","Segoe UI Emoji",sans-serif;padding-bottom:64px}
+a{color:var(--blue);text-decoration:none;cursor:pointer}
+a:hover{text-decoration:underline}
+button{font:inherit;cursor:pointer}
+input,select,textarea{font:inherit;color:var(--t1)}
+h1,h2,h3,p{margin:0}
+
+/* ---------- Global nav ---------- */
+.nav{background:#fff;border-bottom:1px solid var(--line);height:56px;position:sticky;top:0;z-index:40}
+.nav-in{max-width:1128px;margin:0 auto;display:flex;align-items:center;height:100%;padding:0 16px;gap:10px}
+.logo{width:36px;height:36px;border-radius:3px;background:var(--blue);color:#fff;font-weight:700;font-size:25px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:1px;letter-spacing:-1.5px;flex:none;cursor:pointer;font-family:Arial,Helvetica,sans-serif}
+.search{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid rgba(0,0,0,.35);border-radius:20px;height:36px;width:280px;padding:0 14px;color:var(--t1)}
+.search:focus-within{box-shadow:0 0 0 1px var(--t1)}
+.search input{border:0;background:transparent;outline:0;width:100%;font-size:14px}
+.search input::placeholder{color:var(--t2)}
+.nav-items{display:flex;align-items:stretch;margin-left:auto;height:100%}
+.ni{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:76px;color:var(--t2);font-size:12px;cursor:pointer;position:relative;border:0;border-bottom:2px solid transparent;padding:4px 4px 0;background:none;white-space:nowrap}
+.ni:hover{color:var(--t1)}
+.ni.on{color:var(--t1);border-bottom-color:var(--t1)}
+.ni svg{width:24px;height:24px}
+.ni .badge{position:absolute;top:3px;left:calc(50% + 3px);background:var(--red);color:#fff;font-size:11px;font-weight:600;min-width:17px;height:17px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px;box-shadow:0 0 0 2px #fff}
+.ni .bdot{position:absolute;top:5px;left:calc(50% + 6px);width:10px;height:10px;border-radius:50%;background:var(--red);box-shadow:0 0 0 2px #fff}
+.ni-sep{width:1px;background:var(--line);margin:0 6px}
+.ni.prem{color:var(--gold);text-decoration:underline;text-align:center;width:90px;white-space:normal;line-height:1.2;font-size:12px}
+.avatar{border-radius:50%;background:linear-gradient(135deg,#ffb38a,#d6589f);color:#fff;font-weight:600;display:flex;align-items:center;justify-content:center;flex:none}
+.ghost{border-radius:50%;background:#dfe3e8;flex:none;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;box-shadow:0 0 0 2px #fff}
+.ghost svg{width:80%;height:80%;color:#a9b2bc}
+
+/* ---------- Layout ---------- */
+.wrap{max-width:1128px;margin:24px auto;padding:0 16px}
+.g2{display:grid;grid-template-columns:300px minmax(0,1fr);gap:24px;align-items:start}
+.card{background:var(--card);border-radius:8px;box-shadow:var(--shadow);overflow:hidden}
+.card+.card{margin-top:8px}
+.pad{padding:16px 24px}
+.muted{color:var(--t2)}
+.small{font-size:12px}
+.h2{font-size:20px;font-weight:600}
+.h3{font-size:16px;font-weight:600}
+.row{display:flex;align-items:center;gap:8px}
+.between{justify-content:space-between}
+.hr{height:1px;background:var(--line);margin:0}
+
+/* buttons */
+.btn{border-radius:24px;font-weight:600;font-size:16px;padding:6px 16px;min-height:32px;display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;transition:background .15s,box-shadow .15s;white-space:nowrap}
+.btn.sm{font-size:14px;padding:4px 14px;min-height:30px}
+.bp{background:var(--blue);color:#fff}.bp:hover{background:var(--blue-d)}
+.bs{background:transparent;color:var(--blue);box-shadow:inset 0 0 0 1px var(--blue)}.bs:hover{background:rgba(112,181,249,.1);box-shadow:inset 0 0 0 2px var(--blue)}
+.bt{background:transparent;color:var(--t2)}.bt:hover{background:rgba(0,0,0,.08);color:var(--t1)}
+.bm{background:transparent;color:var(--t2);box-shadow:inset 0 0 0 1px var(--t2)}.bm:hover{background:rgba(0,0,0,.08);box-shadow:inset 0 0 0 2px var(--t2);color:var(--t1)}
+.bgold{background:var(--gold-b);color:#000}.bgold:hover{background:#f0b54e}
+.bdanger{background:var(--red);color:#fff}.bdanger:hover{background:#9e0d23}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.icon-btn{width:36px;height:36px;border-radius:50%;border:0;background:transparent;color:var(--t2);display:inline-flex;align-items:center;justify-content:center;flex:none}
+.icon-btn:hover{background:rgba(0,0,0,.08);color:var(--t1)}
+
+/* misc */
+.lg{border-radius:4px;display:flex;align-items:center;justify-content:center;font-weight:700;flex:none;font-family:Arial,sans-serif}
+.li-mini{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:2px;background:var(--blue);color:#fff;font-size:10px;font-weight:700;font-family:Arial,sans-serif;vertical-align:-2px;letter-spacing:-.5px}
+.pb{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:2px;background:var(--gold-ic);color:#fff;font-size:11px;font-weight:700;font-family:Arial,sans-serif;letter-spacing:-.5px;flex:none;vertical-align:-2px}
+.pb.sq{font-size:0}
+.vshield{color:var(--t2);display:inline-flex;vertical-align:-2px;margin-left:4px}
+.tag-new{background:var(--green);color:#fff;font-size:11px;font-weight:700;padding:1px 6px;border-radius:4px;letter-spacing:.3px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:17px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.6);color:var(--t2);font-weight:600;font-size:15px;background:#fff;border:0;white-space:nowrap}
+.pill:hover{box-shadow:inset 0 0 0 2px rgba(0,0,0,.6);background:rgba(0,0,0,.04);color:var(--t1)}
+.pill.on{background:var(--green);color:#fff;box-shadow:none}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:4px;background:#f3f6f8;font-size:14px;color:var(--t1)}
+.dot{width:3px;height:3px;border-radius:50%;background:currentColor;display:inline-block;vertical-align:middle;margin:0 6px;opacity:.7}
+.sdot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--blue);margin-right:8px;vertical-align:1px}
+
+/* status */
+.st{display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;white-space:nowrap}
+.st-Applied{background:var(--blue-l);color:var(--blue)}
+.st-Interview{background:var(--purple-l);color:var(--purple)}
+.st-Offer{background:var(--green-l);color:var(--green)}
+.st-Archived{background:#eef0f2;color:#5e6670}
+.gm{display:inline-flex;width:14px;height:14px;border-radius:3px;background:#fff;box-shadow:inset 0 0 0 1px #e0e0e0;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#d93025;font-family:Arial,sans-serif;flex:none}
+
+/* ---------- Left rail ---------- */
+.prof{position:relative}
+.prof-cover{height:64px;background:linear-gradient(120deg,#a0b4b7 0%,#c7d6d8 55%,#e3dccf 100%);position:relative}
+.prof.premium{border-top:4px solid var(--gold-ic)}
+.prof.premium .prof-cover{background:radial-gradient(circle at 75% 60%,rgba(255,255,255,.08) 0 30px,transparent 31px),radial-gradient(circle at 60% 80%,rgba(255,255,255,.06) 0 40px,transparent 41px),linear-gradient(110deg,#3d0d16 0%,#6b1626 50%,#4a1019 100%)}
+.prof-cover .ptag{position:absolute;right:12px;top:10px;color:#fff;font-weight:600;font-size:15px}
+.prof-av{width:72px;height:72px;margin:-40px 0 0 16px;border:3px solid #fff;font-size:26px;position:relative}
+.prof-body{padding:10px 16px 16px}
+.prof-name{font-size:20px;font-weight:600;line-height:1.25;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.side-list{padding:8px 0}
+.side-list a{display:flex;align-items:center;gap:14px;padding:12px 20px;color:var(--t1);font-weight:600;font-size:16px}
+.side-list a:hover{background:rgba(0,0,0,.04);text-decoration:none}
+.side-list a.on{box-shadow:inset 3px 0 0 var(--green)}
+.side-list svg{width:24px;height:24px;color:var(--t1)}
+.side-list a.blue{color:var(--blue)}
+.side-list a.blue svg{color:var(--blue)}
+.foot{text-align:center;font-size:12px;color:var(--t2);padding:16px 8px;line-height:2}
+.foot a{color:var(--t2);margin:0 6px}
+.foot a:hover{color:var(--blue)}
+.foot .copy{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:4px;color:var(--t1)}
+.wordmark{font-weight:700;color:var(--blue);font-family:Arial,sans-serif;display:inline-flex;align-items:center;gap:1px}
+
+/* ---------- Jobs home ---------- */
+.sec-h{padding:24px 24px 8px;display:flex;gap:12px;align-items:flex-start}
+.sec-h h2{font-size:20px;font-weight:600}
+.sec-h p{color:var(--t2);font-size:14px;margin-top:2px}
+.jrow{display:flex;gap:16px;padding:14px 24px;cursor:pointer;position:relative;border-bottom:1px solid var(--line)}
+.jrow:last-of-type{border-bottom:0}
+.jrow:hover{background:rgba(0,0,0,.03)}
+.jt{color:var(--blue);font-weight:600;font-size:16px;line-height:1.3}
+.jrow:hover .jt,.jcard:hover .jt{text-decoration:underline}
+.jline{font-size:14px;color:var(--t1);margin-top:2px}
+.jsub{font-size:12px;color:var(--t2);margin-top:6px;display:flex;align-items:center;gap:6px}
+.jfoot{font-size:12px;color:var(--t2);margin-top:6px;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.applied-txt{color:var(--green);font-weight:600}
+.prem-txt{color:var(--gold);font-weight:600;display:inline-flex;align-items:center;gap:5px}
+.easy{display:inline-flex;align-items:center;gap:4px}
+.show-all{display:flex;justify-content:center;align-items:center;gap:6px;padding:14px;font-weight:600;font-size:16px;color:var(--t2);border-top:1px solid var(--line);cursor:pointer}
+.show-all:hover{background:rgba(0,0,0,.04);color:var(--t1);text-decoration:none}
+.prem-sec{border-top:4px solid var(--gold-b)}
+.prem-k{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--t1);margin-bottom:4px}
+.newband{display:flex;gap:16px;padding:18px 24px;align-items:center}
+.newband .ill{width:56px;height:56px;border-radius:8px;background:var(--blue-l);color:var(--blue);display:flex;align-items:center;justify-content:center;flex:none}
+
+/* ---------- Search split view ---------- */
+.fbar{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:56px;z-index:30}
+.fbar-in{max-width:1128px;margin:0 auto;padding:10px 16px;display:flex;gap:8px;flex-wrap:wrap}
+.split{max-width:1128px;margin:0 auto;display:grid;grid-template-columns:minmax(0,2fr) minmax(0,3fr);background:#fff;box-shadow:var(--shadow);height:calc(100vh - 56px - 55px);min-height:520px}
+.jl{border-right:1px solid var(--line);overflow-y:auto}
+.jl-head{padding:12px 16px;background:var(--blue);color:#fff}
+.jl-head b{font-size:16px}
+.jcard{display:flex;gap:10px;padding:12px 8px 12px 16px;cursor:pointer;border-bottom:1px solid var(--line);position:relative}
+.jcard:hover{background:rgba(0,0,0,.04)}
+.jcard.sel{background:#edf3f8;box-shadow:inset 3px 0 0 var(--blue)}
+.jd{overflow-y:auto;padding:24px}
+.jd h1{font-size:24px;font-weight:600;line-height:1.25;margin:8px 0 4px}
+.jd-meta{color:var(--t2);font-size:14px}
+.jd-meta .hl{color:var(--green);font-weight:600}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.jd-sec{margin-top:24px}
+.jd-sec h2{font-size:20px;font-weight:600;margin-bottom:12px}
+.jd-sec p,.jd-sec li{font-size:14px;line-height:1.6}
+.jd-sec ul{padding-left:20px;margin:8px 0 16px}
+
+/* duplicate alert (Premium) */
+.dup{border-radius:8px;background:var(--gold-l);box-shadow:inset 0 0 0 1px #f0d7a6;padding:14px 16px;margin:12px 0 4px}
+.dup-h{font-weight:600;font-size:16px}
+.dup-k{font-size:12px;font-weight:600;color:var(--t1);display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.dup-rec{display:flex;gap:10px;align-items:center;background:#fff;border-radius:8px;padding:10px 12px;margin:10px 0;box-shadow:0 0 0 1px rgba(0,0,0,.08)}
+.dup-why{font-size:12px;color:var(--t2);margin-top:8px;background:rgba(255,255,255,.6);border-radius:6px;padding:8px 10px}
+.dup-why ul{margin:4px 0 0;padding-left:18px}
+.teaser{display:flex;gap:10px;align-items:center;background:#fbf7f0;border-radius:8px;padding:10px 14px;margin:12px 0 4px;box-shadow:inset 0 0 0 1px #efe2c8;font-size:14px}
+.applied-box{display:flex;gap:10px;align-items:center;background:var(--green-l);border-radius:8px;padding:10px 14px;margin:12px 0 4px;color:var(--t1)}
+.nomatch{font-size:12px;color:var(--t2);display:flex;align-items:center;gap:6px;margin:12px 0 0}
+
+/* ---------- Job tracker ---------- */
+.trk{max-width:1128px;margin:24px auto;padding:0 16px}
+.trk-card{padding:24px 32px 8px}
+.trk-title{display:flex;align-items:center;gap:16px}
+.trk-title h1{font-size:24px;font-weight:600}
+.pills{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:28px 0 20px}
+.selpill{appearance:none;-webkit-appearance:none;border:0;box-shadow:inset 0 0 0 1px rgba(0,0,0,.6);border-radius:17px;height:34px;padding:0 34px 0 14px;font-weight:600;font-size:15px;color:var(--t2);background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M0 0h10L5 6z' fill='%23555'/%3E%3C/svg%3E") no-repeat right 14px center/10px;cursor:pointer}
+.selpill:hover{box-shadow:inset 0 0 0 2px rgba(0,0,0,.6)}
+.gband{display:flex;gap:14px;align-items:center;background:#f3f6f8;border-radius:8px;padding:14px 16px;margin-top:20px}
+.g-ic{width:40px;height:40px;border-radius:8px;background:#fff;box-shadow:0 0 0 1px var(--line);display:flex;align-items:center;justify-content:center;flex:none}
+table.tt{width:100%;border-collapse:collapse}
+.tt th{text-align:left;font-size:16px;color:var(--t1);font-weight:600;padding:14px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+.tt td{padding:20px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+.tt th:first-child,.tt td:first-child{padding-left:0;width:56px}
+.tt th:last-child,.tt td:last-child{padding-right:0}
+.tt tr.r{cursor:pointer}
+.tt tr.r:hover td{background:#fafbfc}
+.tt tr.flash td{animation:flash 1.6s ease}
+@keyframes flash{0%,30%{background:#fff4d6}100%{background:transparent}}
+.cb{width:24px;height:24px;border-radius:4px;border:1.5px solid rgba(0,0,0,.6);appearance:none;-webkit-appearance:none;margin:16px 0 0;cursor:pointer;background:#fff}
+.cb:checked{background:var(--green) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M6 11.2L2.4 7.6 1 9l5 5 9-12h-2.4z' fill='white'/%3E%3C/svg%3E") no-repeat center/14px;border-color:var(--green)}
+.jobcell{display:flex;gap:14px}
+.jobcell .ttl{font-size:18px;font-weight:600;line-height:1.3;color:var(--t1)}
+tr.r:hover .ttl{color:var(--blue);text-decoration:underline}
+.jobcell .co{font-size:16px;color:var(--t1);margin-top:2px}
+.jobcell .meta{font-size:14px;color:var(--t2);margin-top:2px}
+.jobcell .ev{font-size:14px;color:var(--t1);margin-top:6px;display:flex;align-items:center}
+.srcline{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--t2);margin-top:6px;background:#f3f6f8;border-radius:4px;padding:2px 8px}
+.conns{display:flex;padding-top:14px}
+.conns .ghost+.ghost{margin-left:-8px}
+.addnote{display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:16px;color:var(--t2);background:none;border:0;padding:6px 8px;border-radius:4px;margin-top:8px}
+.addnote:hover{background:rgba(0,0,0,.06);color:var(--t1)}
+.notetxt{font-size:14px;color:var(--t1);margin-top:12px;max-width:220px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.hear{text-align:right;white-space:nowrap}
+.hear b{font-size:16px;display:block;margin-bottom:8px}
+.yn{display:inline-flex;align-items:center;justify-content:center;height:36px;min-width:56px;padding:0 14px;border-radius:18px;border:0;box-shadow:inset 0 0 0 1px rgba(0,0,0,.6);background:#fff;font-weight:600;font-size:16px;color:var(--t2);margin-left:8px}
+.yn:hover{box-shadow:inset 0 0 0 2px rgba(0,0,0,.6);color:var(--t1)}
+.stagecell{text-align:right;padding-top:14px}
+.menuwrap{position:relative;padding-top:6px}
+.menu{position:absolute;right:0;top:48px;background:#fff;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.15),0 0 0 1px rgba(0,0,0,.08);z-index:20;min-width:240px;padding:8px 0;cursor:default}
+.menu button{display:flex;align-items:center;gap:14px;width:100%;background:none;border:0;padding:12px 20px;font-size:16px;font-weight:600;color:var(--t1);text-align:left}
+.menu button:hover{background:rgba(0,0,0,.06)}
+.menu svg{width:22px;height:22px}
+.notseeing{padding:22px 0 26px;font-size:16px;color:var(--t2)}
+.notseeing a{font-weight:600}
+.empty{padding:48px 24px;text-align:center;color:var(--t2);font-size:16px}
+.sugg{border:1px solid var(--line);border-radius:8px;margin-top:16px;overflow:hidden}
+.sugg-h{display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f9fbfd;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.sc{padding:14px 16px;border-bottom:1px solid var(--line)}
+.sc:last-child{border-bottom:0}
+.sc-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--t2)}
+.ktag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;letter-spacing:.2px}
+.k-confirm{background:var(--blue-l);color:var(--blue)}
+.k-interview{background:var(--purple-l);color:var(--purple)}
+.k-reject{background:#eef0f2;color:#5e6670}
+.conf{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600}
+.conf.hi{color:var(--green)}.conf.lo{color:#b24020}
+.mail{background:#f6f7f8;border-radius:6px;padding:10px 12px;margin-top:10px;font-size:13px;border-left:3px solid #d0d5da}
+.mail .sub{font-weight:600}
+.arrow{color:var(--t3);margin:0 4px}
+
+/* ---------- Overlays ---------- */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:60;display:flex;align-items:flex-start;justify-content:center;padding:48px 16px;overflow-y:auto;animation:fade .15s}
+@keyframes fade{from{opacity:0}}
+.modal{background:#fff;border-radius:8px;width:100%;max-width:552px;box-shadow:0 4px 16px rgba(0,0,0,.3);animation:rise .2s ease;overflow:hidden}
+@keyframes rise{from{transform:translateY(12px);opacity:0}}
+.mh{display:flex;align-items:center;justify-content:space-between;padding:12px 12px 12px 24px;border-bottom:1px solid var(--line)}
+.mh h2{font-size:20px;font-weight:600}
+.mb{padding:16px 24px;max-height:calc(100vh - 220px);overflow-y:auto}
+.mf{display:flex;justify-content:flex-end;gap:8px;padding:12px 16px;border-top:1px solid var(--line);align-items:center}
+.fld{margin-bottom:14px}
+.fld label{display:block;font-size:14px;color:var(--t2);margin-bottom:4px}
+.fld input,.fld select,.fld textarea{width:100%;border:1px solid rgba(0,0,0,.6);border-radius:4px;padding:7px 10px;font-size:14px;background:#fff}
+.fld input:focus,.fld select:focus,.fld textarea:focus{outline:0;box-shadow:0 0 0 1px var(--t1);border-color:var(--t1)}
+.fld .err{color:var(--red);font-size:12px;margin-top:4px;display:none}
+.fld.bad input{border-color:var(--red)}.fld.bad .err{display:block}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.prog{height:8px;background:#e9e9e9;border-radius:4px;overflow:hidden}
+.prog>div{height:100%;background:var(--blue);border-radius:4px;transition:width .4s ease}
+.perm{display:flex;gap:12px;padding:12px 0}
+.perm+.perm{border-top:1px solid var(--line)}
+.perm-ic{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none}
+.perm ul{margin:4px 0 0;padding-left:18px;color:var(--t2)}
+.perm li{margin:2px 0}
+.gwin{border:1px solid #dadce0;border-radius:8px;padding:28px 32px;text-align:center;font-family:Roboto,Arial,sans-serif}
+.gword{font-size:22px;font-weight:500;letter-spacing:-.5px}
+.acct{display:inline-flex;align-items:center;gap:8px;border:1px solid #dadce0;border-radius:16px;padding:3px 12px 3px 4px;font-size:14px;margin:12px 0}
+.gperm{text-align:left;border-top:1px solid #e8eaed;border-bottom:1px solid #e8eaed;padding:12px 0;margin:16px 0;font-size:14px;color:#3c4043}
+.gbtn{background:#1a73e8;color:#fff;border:0;border-radius:4px;padding:9px 24px;font-weight:500}
+.gbtn2{background:transparent;color:#1a73e8;border:0;border-radius:4px;padding:9px 16px;font-weight:500}
+.radio{display:flex;gap:10px;align-items:flex-start;padding:8px 0;cursor:pointer}
+.radio input{margin-top:3px;accent-color:var(--green);width:18px;height:18px}
+.tog{position:relative;width:40px;height:24px;flex:none;border:0;border-radius:12px;background:#8c8c8c;transition:background .2s;padding:0}
+.tog:after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .2s}
+.tog.on{background:var(--green)}
+.tog.on:after{transform:translateX(16px)}
+.set-row{display:flex;gap:16px;align-items:center;justify-content:space-between;padding:14px 0}
+.set-row+.set-row{border-top:1px solid var(--line)}
+.prem-hero{background:linear-gradient(120deg,#fff6ea 0%,#fde8cc 100%);padding:28px 24px 20px;position:relative}
+
+/* drawer */
+.dscrim{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:55;animation:fade .15s}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:440px;max-width:100%;background:#fff;z-index:56;box-shadow:-4px 0 16px rgba(0,0,0,.15);display:flex;flex-direction:column;animation:slide .22s ease}
+@keyframes slide{from{transform:translateX(30px);opacity:.3}}
+.dh{padding:16px 16px 16px 24px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:flex-start}
+.db{padding:16px 24px;overflow-y:auto;flex:1}
+.kv{display:grid;grid-template-columns:120px 1fr;gap:8px 12px;font-size:14px;margin:12px 0}
+.kv dt{color:var(--t2)}
+.kv dd{margin:0}
+.tl{list-style:none;padding:0;margin:8px 0 0}
+.tl li{position:relative;padding:0 0 14px 22px;font-size:14px}
+.tl li:before{content:"";position:absolute;left:4px;top:6px;width:8px;height:8px;border-radius:50%;background:var(--blue)}
+.tl li:after{content:"";position:absolute;left:7.5px;top:16px;bottom:-2px;width:1px;background:#d0d5da}
+.tl li:last-child:after{display:none}
+.tl small{display:block;color:var(--t2);font-size:12px}
+.sec-t{font-size:16px;font-weight:600;margin:20px 0 6px}
+textarea.note{width:100%;min-height:80px;border:1px solid rgba(0,0,0,.4);border-radius:4px;padding:8px 10px;resize:vertical}
+
+/* toast */
+.toast{position:fixed;left:24px;bottom:24px;z-index:80;background:#fff;border-radius:8px;box-shadow:0 0 0 1px rgba(0,0,0,.08),0 4px 12px rgba(0,0,0,.2);padding:12px 12px 12px 16px;display:flex;gap:12px;align-items:center;max-width:440px;animation:rise .2s ease}
+.toast .ok{width:24px;height:24px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;flex:none}
+
+/* messaging dock */
+.dock{position:fixed;right:24px;bottom:0;width:300px;height:48px;background:var(--blue);color:#fff;border-radius:10px 10px 0 0;display:flex;align-items:center;gap:10px;padding:0 10px 0 12px;z-index:45;box-shadow:0 0 8px rgba(0,0,0,.2);cursor:pointer;border:0;font:inherit;text-align:left}
+.dock b{font-size:16px;flex:1}
+.dock svg{width:18px;height:18px}
+
+/* prototype panel */
+.proto{position:fixed;right:24px;bottom:60px;z-index:50;font-size:13px}
+.proto-btn{background:#1d2226;color:#fff;border:0;border-radius:20px;padding:8px 14px;font-weight:600;box-shadow:0 4px 12px rgba(0,0,0,.25);display:flex;gap:8px;align-items:center;margin-left:auto}
+.proto-card{width:290px;background:#1d2226;color:#e8e8e8;border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.35);padding:14px 16px;margin-bottom:10px}
+.proto-card h4{margin:0 0 2px;font-size:14px;color:#fff}
+.proto-card .pr{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #333a40}
+.proto-card .jump{display:block;width:100%;text-align:left;background:#2a3036;color:#fff;border:0;border-radius:6px;padding:7px 10px;margin-top:6px;font-size:13px}
+.proto-card .jump:hover{background:#353c43}
+.proto-card .jump span{color:#9aa3ab;margin-right:6px}
+.proto-card .rst{background:none;border:0;color:#9ac7f5;padding:8px 0 0;font-size:12px}
+
+@media (max-width:1000px){
+  .g2{grid-template-columns:minmax(0,1fr)}
+  .g2>.l{display:none}
+  .search{width:auto;flex:1}
+  .ni{min-width:52px}.ni span{display:none}.ni.prem,.ni-sep,.ni.biz{display:none}
+  .tt .hide-m{display:none}
+}
+@media (max-width:760px){
+  .split{grid-template-columns:1fr;height:auto}
+  .jl{max-height:300px}
+  .wrap,.trk{padding:0 8px}
+  .trk-card{padding:16px}
+  .nav-in{padding:0 8px}
+  .ni{min-width:42px}
+  .f2{grid-template-columns:1fr}
+  .dock{display:none}
+  .hear b{display:none}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="ov"></div>
+<div id="toast"></div>
+<div id="proto"></div>
+
+<script>
+/* =========================================================
+   LinkedIn Job Tracker — external application tracking
+   Clickable prototype · MOR 530 · Team 3 · Kiki Huang
+   Academic simulation, not a LinkedIn product.
+   ========================================================= */
+const TODAY = '2026-10-18';
+const D = s => new Date(s + 'T12:00:00');
+const fmt = s => s ? D(s).toLocaleDateString('en-US', {month:'short', day:'numeric'}) : '—';
+const fmtL = s => D(s).toLocaleDateString('en-US', {month:'long', day:'numeric'});
+function ago(s, short){
+  const d = Math.round((D(TODAY) - D(s)) / 864e5);
+  if (short){
+    if (d <= 0) return 'today';
+    if (d < 7) return d + 'd ago';
+    if (d < 30) return Math.round(d/7) + 'w ago';
+    return Math.round(d/30) + 'mo ago';
+  }
+  if (d <= 0) return 'today';
+  if (d === 1) return '1 day ago';
+  if (d < 7) return d + ' days ago';
+  if (d < 30){ const w = Math.round(d/7); return w + (w === 1 ? ' week ago' : ' weeks ago'); }
+  const m = Math.round(d/30); return m + (m === 1 ? ' month ago' : ' months ago');
+}
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let uid = 100; const nid = p => p + (++uid);
+const norm = s => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+const STAGES = ['Applied', 'Interview', 'Offer', 'Archived'];
+const STAGE_HINT = {Applied:'Waiting to hear back', Interview:'Interviewing with the company', Offer:'You received an offer', Archived:'Not selected, withdrawn, or closed'};
+const ME = {name:'Beibei (Kiki) Huang', email:'kiki.huang.demo@gmail.com', head:'USC MSBA | Business Analysis | Product & Business Operations | Power BI', loc:'Los Angeles, California', school:'USC Marshall School of Business'};
+
+/* ---------- icons ---------- */
+const I = {
+  search:'<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M14.56 12.44L11.3 9.18a5.51 5.51 0 10-2.12 2.12l3.26 3.26a1.5 1.5 0 102.12-2.12zM3 6.5A3.5 3.5 0 116.5 10 3.5 3.5 0 013 6.5z"/></svg>',
+  home:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M23 9v2h-2v7a3 3 0 01-3 3h-4v-6h-4v6H6a3 3 0 01-3-3v-7H1V9l11-7 5 3.18V2h3v5.09z"/></svg>',
+  net:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 16v6H3v-6a3 3 0 013-3h3a3 3 0 013 3zm5.5-3A3.5 3.5 0 1014 9.5a3.5 3.5 0 003.5 3.5zm1 2h-2a2.5 2.5 0 00-2.5 2.5V22h7v-4.5a2.5 2.5 0 00-2.5-2.5zM7.5 2A4.5 4.5 0 1012 6.5 4.49 4.49 0 007.5 2z"/></svg>',
+  jobs:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 6V5a3 3 0 00-3-3h-4a3 3 0 00-3 3v1H2v4a3 3 0 003 3h14a3 3 0 003-3V6zM9 5a1 1 0 011-1h4a1 1 0 011 1v1H9zm10 9a4 4 0 003-1.38V17a3 3 0 01-3 3H5a3 3 0 01-3-3v-4.38A4 4 0 005 14z"/></svg>',
+  msg:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 4H8a7 7 0 000 14h4v4l8.16-5.39A6.78 6.78 0 0023 11a7 7 0 00-7-7zm-8 8.25A1.25 1.25 0 119.25 11 1.25 1.25 0 018 12.25zm4 0A1.25 1.25 0 1113.25 11 1.25 1.25 0 0112 12.25zm4 0A1.25 1.25 0 1117.25 11 1.25 1.25 0 0116 12.25z"/></svg>',
+  bell:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 19h-8.28a2 2 0 11-3.44 0H2v-1a4.52 4.52 0 011.17-2.83l1-1.17h15.7l1 1.17A4.42 4.42 0 0122 18zM18.21 7.44A6.27 6.27 0 0012 2a6.27 6.27 0 00-6.21 5.44L5 13h14z"/></svg>',
+  grid:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h4v4H3zm7 4h4V3h-4zm7-4v4h4V3zM3 14h4v-4H3zm7 0h4v-4h-4zm7 0h4v-4h-4zM3 21h4v-4H3zm7 0h4v-4h-4zm7 0h4v-4h-4z"/></svg>',
+  learn:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="14" rx="1"/><path d="M10 8.5v5l4-2.5z" fill="currentColor" stroke="none"/><path d="M8 21h8"/></svg>',
+  x:'<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M13.42 12L20 18.58 18.58 20 12 13.42 5.42 20 4 18.58 10.58 12 4 5.42 5.42 4 12 10.58 18.58 4 20 5.42z"/></svg>',
+  check:'<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M12.57 2H15L6 14 1 9l1.4-1.4L6 11.2z"/></svg>',
+  ext:'<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M15 1v6h-2V4.41L7.41 10 6 8.59 11.59 3H9V1zm-4 10a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1h2V3H5a3 3 0 00-3 3v5a3 3 0 003 3h5a3 3 0 003-3V9h-2z"/></svg>',
+  bookmark:'<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M19 5a3 3 0 00-3-3H8a3 3 0 00-3 3v17l7-5 7 5zm-2 13.11l-5-3.57-5 3.57V5a1 1 0 011-1h8a1 1 0 011 1z"/></svg>',
+  bookmarkF:'<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M19 5a3 3 0 00-3-3H8a3 3 0 00-3 3v17l7-5 7 5z"/></svg>',
+  prefs:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 4h3v3H3zm5 .5h13v2H8zM3 10.5h3v3H3zm5 .5h13v2H8zM3 17h3v3H3zm5 .5h13v2H8z"/></svg>',
+  insights:'<svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="3" fill="#e7a33e"/><path d="M2 2h20L2 22z" fill="#f8c77e"/></svg>',
+  post:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2h7"/><path d="M18.5 2.5a2.1 2.1 0 013 3L12 15l-4 1 1-4z"/></svg>',
+  shield:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L4 5v6c0 5 3.4 9.7 8 11 4.6-1.3 8-6 8-11V5zm-1.2 14.2L7 12.4l1.4-1.4 2.4 2.4 4.8-4.8L17 10z"/></svg>',
+  verified:'<span class="vshield"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2.5l8 3v6c0 4.6-3.3 8.6-8 10-4.7-1.4-8-5.4-8-10v-6z"/><path d="M8.3 12.2l2.6 2.6 4.9-5.4"/></svg></span>',
+  gear:'<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19.4 13a7.5 7.5 0 000-2l2-1.6-2-3.4-2.4 1a7.6 7.6 0 00-1.7-1L15 3.5h-4l-.4 2.5a7.6 7.6 0 00-1.7 1l-2.4-1-2 3.4 2 1.6a7.5 7.5 0 000 2l-2 1.6 2 3.4 2.4-1a7.6 7.6 0 001.7 1l.4 2.5h4l.4-2.5a7.6 7.6 0 001.7-1l2.4 1 2-3.4zM13 15.5a3.5 3.5 0 112-1 3.5 3.5 0 01-2 1z"/></svg>',
+  plus:'<svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M14 9H9v5H7V9H2V7h5V2h2v5h5z"/></svg>',
+  dots:'<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M14 12a2 2 0 11-2-2 2 2 0 012 2zM4 10a2 2 0 102 2 2 2 0 00-2-2zm16 0a2 2 0 102 2 2 2 0 00-2-2z"/></svg>',
+  info:'<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 107 7 7 7 0 00-7-7zm1 11H7V7h2zm0-6H7V4h2z"/></svg>',
+  lock:'<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M12 6V5a4 4 0 00-8 0v1H3v9h10V6zM6 5a2 2 0 014 0v1H6z"/></svg>',
+  mail:'<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M2 5h20v14H2zm2 2v.5l8 5 8-5V7zm16 10V9.8l-8 5-8-5V17z"/></svg>',
+  eye:'<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 5C6 5 2 12 2 12s4 7 10 7 10-7 10-7-4-7-10-7zm0 11a4 4 0 114-4 4 4 0 01-4 4z"/></svg>',
+  flag:'<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M14 4l-1-2H4v20h2v-8h6l1 2h7V4z"/></svg>',
+  trash:'<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4v1H4V4a1 1 0 011-1h4a1 1 0 011-1h4a1 1 0 011 1h4a1 1 0 011 1zM5 6h14v13a3 3 0 01-3 3H8a3 3 0 01-3-3zm9 13h2V9h-2zm-6 0h2V9H8z"/></svg>',
+  edit:'<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M21.13 2.86a3 3 0 00-4.17 0l-13 13L2 22l6.19-2L21.13 7a3 3 0 000-4.16zM6.77 18.57l-1.35-1.34L16.64 6 18 7.35z"/></svg>',
+  stage:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M8 7l4-4 4 4M8 17l4 4 4-4"/></svg>',
+  archive:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 4H4v16h16V4h-4"/><path d="M12 3v10M8.5 9.5L12 13l3.5-3.5"/></svg>',
+  back:'<svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M21 11H6.83l5.58-5.59L11 4l-8 8 8 8 1.41-1.41L6.83 13H21z"/></svg>',
+  person:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="9" r="5"/><path d="M2 24c0-6 4.5-9 10-9s10 3 10 9z"/></svg>',
+  globe:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></svg>',
+  chevup:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 15l7-7 7 7"/></svg>',
+  compose:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2h6"/><path d="M17.5 3.5a2.1 2.1 0 013 3L12 15l-4 1 1-4z"/></svg>',
+};
+const GM = '<span class="gm">M</span>';
+const LI = '<span class="li-mini">in</span>';
+const PB = '<span class="pb">in</span>';
+const PSQ = '<span class="pb sq"></span>';
+const ghost = (n, sz = 32) => Array.from({length:n}, () => `<span class="ghost" style="width:${sz}px;height:${sz}px">${I.person}</span>`).join('');
+
+/* ---------- company logos (placeholder monograms, not real marks) ---------- */
+const CO = {
+  Amazon:['#232F3E','#FF9900'], Google:['#E8F0FE','#1A73E8'], TikTok:['#111','#25F4EE'], Disney:['#0B1F6B','#fff'],
+  Netflix:['#141414','#E50914'], Snap:['#FFFC00','#111'], Spotify:['#191414','#1DB954'], 'Riot Games':['#D13639','#fff'],
+  Adobe:['#FA0F00','#fff'], Pinterest:['#E60023','#fff'], Deloitte:['#000','#86BC25'], Hulu:['#1CE783','#0b0c0f']
+};
+const PAL = [['#dce6f1','#0a66c2'],['#f1e4dc','#9b4a1c'],['#e3f0e6','#2b6e3f'],['#efe3f3','#6c3a83']];
+function logo(c, sz = 48){
+  let p = CO[c]; if (!p){ let h = 0; for (const ch of String(c)) h += ch.charCodeAt(0); p = PAL[h % PAL.length]; }
+  return `<div class="lg" style="width:${sz}px;height:${sz}px;font-size:${Math.round(sz*.44)}px;background:${p[0]};color:${p[1]};${p[0]==='#FFFC00'?'box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)':''}">${esc((c||'?')[0].toUpperCase())}</div>`;
+}
+
+/* ---------- data ---------- */
+const RESP_A = ['Build dashboards and recurring reports that help partner teams track product health','Write SQL to pull, clean, and analyze large datasets; turn results into clear recommendations','Partner with product managers to define success metrics and size opportunities'];
+const QUAL_A = ['Bachelor\'s or Master\'s degree in a quantitative field, or equivalent experience','Experience with SQL and a spreadsheet or BI tool (Tableau, Power BI, or similar)','Clear written and verbal communication; comfortable presenting to non-technical partners'];
+const JOBS = [
+  {id:'j1', company:'Google', title:'Data Analyst', location:'Mountain View, CA', mode:'Hybrid', type:'Full-time', level:'Entry level', posted:'2026-10-16', applicants:'Over 100 people clicked apply', easy:false, jobId:'R-4471', salary:'$98K/yr – $135K/yr', promoted:true, alumni:4, benefits:'Medical, Vision, Dental, 401(k)',
+   about:'The Data Analyst will help our Ads Measurement team turn complex data into insights that guide product and business decisions. You\'ll work across engineering, product, and sales to answer high-impact questions.'},
+  {id:'j2', company:'Amazon', title:'Product Analyst', location:'Seattle, WA', mode:'On-site', type:'Full-time', level:'Entry level', posted:'2026-09-12', applicants:'Over 200 applicants', easy:true, jobId:'A-20931', salary:'$92K/yr – $128K/yr', alumni:12,
+   about:'Join the Prime Video product team to analyze customer behavior, run experiments, and shape the roadmap for new viewing features used by millions of customers.'},
+  {id:'j3', company:'Netflix', title:'Business Analyst', location:'Los Gatos, CA', mode:'Hybrid', type:'Full-time', level:'Associate', posted:'2026-10-14', applicants:'87 applicants', easy:false, jobId:'JR-2290', salary:'$110K/yr – $150K/yr', alumni:3, promoted:true,
+   about:'The Content Strategy & Analysis team is looking for a Business Analyst to support decisions about which stories we tell and how we bring them to members around the world.'},
+  {id:'j4', company:'Spotify', title:'Data Analyst, Product Insights', location:'Los Angeles, CA', mode:'Hybrid', type:'Full-time', level:'Entry level', posted:'2026-10-17', applicants:'Be among the first 25 applicants', easy:true, jobId:'SP-7712', salary:'$95K/yr – $125K/yr', promoted:true, alumni:2, benefits:'401(k) benefit',
+   about:'Product Insights partners with product teams to understand how listeners discover podcasts and music. You\'ll design analyses, build metrics, and share findings that shape the product.'},
+  {id:'j5', company:'Snap', title:'Product Operations Associate', location:'Santa Monica, CA', mode:'On-site', type:'Full-time', level:'Entry level', posted:'2026-10-11', applicants:'64 applicants', easy:false, jobId:'SN-5521', salary:'$85K/yr – $110K/yr', alumni:5,
+   about:'Product Operations keeps launches running smoothly. You\'ll coordinate across product, engineering, and support teams, track launch readiness, and turn user feedback into clear product requests.'},
+  {id:'j6', company:'Riot Games', title:'Business Intelligence Analyst', location:'Los Angeles, CA', mode:'Hybrid', type:'Full-time', level:'Associate', posted:'2026-10-15', applicants:'41 applicants', easy:false, jobId:'RG-3307', salary:'$90K/yr – $120K/yr', alumni:6, benefits:'Medical, 401(k)',
+   about:'Help player-focused teams understand engagement across our games. You\'ll own dashboards, partner with game teams, and answer questions about how players experience our titles.'},
+  {id:'j7', company:'Hulu', title:'Marketing Data Analyst', location:'Santa Monica, CA', mode:'Hybrid', type:'Full-time', level:'Entry level', posted:'2026-10-13', applicants:'Over 100 applicants', easy:true, jobId:'HU-1180', salary:'$88K/yr – $115K/yr', alumni:3,
+   about:'Measure the impact of subscriber marketing campaigns and help the team decide where to invest. You\'ll build attribution reporting and present results to marketing leaders.'},
+];
+function seedRecords(){ return [
+  {id:'r1', company:'Amazon', role:'Product Analyst', location:'Seattle, WA (On-site)', applied:'2026-09-18', posted:'2026-09-12', status:'Applied', updated:'2026-09-18', source:'easy', via:'LinkedIn Easy Apply', jobId:'A-20931', notes:'', emails:[], conns:3, event:'Resume downloaded',
+   tl:[{d:'2026-09-18', t:'Applied with LinkedIn Easy Apply'}]},
+  {id:'r2', company:'TikTok', role:'Strategy Analyst', location:'Los Angeles, CA (Hybrid)', applied:'2026-09-21', status:'Archived', updated:'2026-09-29', source:'manual', via:'Company website', jobId:'', notes:'Rejection email 9/29. Try again next cycle.', emails:[], conns:1,
+   tl:[{d:'2026-09-21', t:'Added by you'}, {d:'2026-09-29', t:'Moved to Archived (by you)'}]},
+  {id:'r3', company:'Google', role:'Data Analyst', location:'Mountain View, CA (Hybrid)', applied:'2026-09-24', status:'Applied', updated:'2026-09-24', source:'manual', via:'Company website (Google Careers)', jobId:'R-4471', notes:'Referred by a USC Marshall alum.', emails:[], conns:2,
+   tl:[{d:'2026-09-24', t:'Added by you'}]},
+  {id:'r4', company:'Disney', role:'Marketing Analytics Intern', location:'Burbank, CA (Hybrid)', applied:'2026-10-02', posted:'2026-09-29', status:'Interview', updated:'2026-10-10', source:'easy', via:'LinkedIn Easy Apply', jobId:'', notes:'Phone screen Oct 21, 2 pm.', emails:[], conns:1, event:'Resume downloaded',
+   tl:[{d:'2026-10-02', t:'Applied with LinkedIn Easy Apply'}, {d:'2026-10-10', t:'Moved to Interview (by you)'}]},
+  {id:'r5', company:'Pinterest', role:'Business Analyst Intern', location:'San Francisco, CA', applied:'2026-10-05', status:'Applied', updated:'2026-10-05', source:'manual', via:'Handshake', jobId:'', notes:'', emails:[], conns:0,
+   tl:[{d:'2026-10-05', t:'Added by you'}]},
+  {id:'r6', company:'Deloitte', role:'Analyst, Strategy & Analytics', location:'Los Angeles, CA', applied:'2026-08-28', status:'Offer', updated:'2026-10-14', source:'manual', via:'Indeed', jobId:'', notes:'Offer deadline Oct 30.', emails:[], conns:4,
+   tl:[{d:'2026-08-28', t:'Added by you'}, {d:'2026-09-15', t:'Moved to Interview (by you)'}, {d:'2026-10-14', t:'Moved to Offer (by you)'}]},
+];}
+const GMAIL_POOL = [
+  {id:'s1', kind:'interview', label:'Interview invitation', from:'Amazon Recruiting', date:'2026-10-02', subject:'Amazon | Next steps for Product Analyst',
+   body:'Hi Kiki, thank you for your interest in the Product Analyst role. We would like to schedule a 45-minute interview with the team. Please choose a time using the link below…',
+   action:'update', target:'r1', newStatus:'Interview', company:'Amazon', role:'Product Analyst', conf:'hi', why:'Matched to your Easy Apply job: same company and job title.'},
+  {id:'s2', kind:'confirm', label:'Application confirmation', from:'Netflix Jobs', date:'2026-10-06', subject:'Thank you for applying to Netflix',
+   body:'We\'ve received your application for Business Analyst (Los Gatos, CA), requisition JR-2290. Our team will review your background and reach out if there\'s a fit…',
+   action:'new', company:'Netflix', role:'Business Analyst', location:'Los Gatos, CA', status:'Applied', via:'Company website (Netflix Jobs)', jobId:'JR-2290', conf:'hi', why:'Company, title, location, and requisition ID found in the email.'},
+  {id:'s3', kind:'confirm', label:'Application confirmation', from:'Snap Inc. via Greenhouse', date:'2026-10-09', subject:'Snap Inc. — Application received',
+   body:'Thanks for applying to the Product Operations Associate position in Santa Monica, CA. We review every application carefully…',
+   action:'new', company:'Snap', role:'Product Operations Associate', location:'Santa Monica, CA', status:'Applied', via:'Company website (Greenhouse)', jobId:'', conf:'hi', why:'Company, title, and location found in the email.'},
+  {id:'s4', kind:'reject', label:'Rejection', from:'Adobe Talent Acquisition', date:'2026-10-12', subject:'Update on your application',
+   body:'Thank you for your interest in Adobe. After careful consideration, we have decided to move forward with other candidates for this position…',
+   action:'new', company:'Adobe', role:'', location:'', status:'Archived', via:'Company website', jobId:'', conf:'lo', why:'The email doesn\'t name the job. Add the title so we can track it correctly.'},
+];
+
+function initial(){ return {
+  view:'home', job:'j1', premium:false, alertsOn:true, gmail:false, synced:null,
+  records:seedRecords(), sugg:[], reviewed:0, suppressed:[], saved:[], hidden:[], tab:'Applied', src:'all',
+  drawer:null, modal:null, menu:null, why:false, openMail:{}, proto:window.innerWidth > 1100, flash:null, checked:[]
+};}
+let S = initial();
+
+/* ---------- helpers ---------- */
+const rec = id => S.records.find(r => r.id === id);
+const jobById = id => JOBS.find(j => j.id === id);
+function matchRecord(j){ return S.records.find(r => norm(r.company) === norm(j.company) && norm(r.role) === norm(j.title)); }
+const stPill = s => `<span class="st st-${s}">${s}</span>`;
+function viaShort(r){ return (r.via || '').replace(/\s*\(.*\)/, ''); }
+const pending = () => S.sugg.length;
+const alertFor = j => { const r = matchRecord(j); return r && r.source !== 'easy' && !S.suppressed.includes(j.id) ? r : null; };
+const count = st => S.records.filter(r => r.status === st).length;
+
+/* =========================================================
+   Views
+   ========================================================= */
+function nav(){
+  const item = (ic, label, act, on, extra = '', v = '') => `<button class="ni ${on?'on':''}" data-act="${act}" ${v?`data-v="${v}"`:''}>${extra}${I[ic]}<span>${label}</span></button>`;
+  const jobsOn = S.view !== 'feed';
+  const ph = S.view === 'tracker' ? 'I\'m looking for…' : 'Describe the job you want';
+  return `<header class="nav"><div class="nav-in">
+    <div class="logo" data-act="go" data-v="home" title="LinkedIn">in</div>
+    <label class="search">${I.search}<input placeholder="${ph}" value="${S.view==='search'?'data analyst':''}" onkeydown="if(event.key==='Enter'){act('go',{v:'search'})}"></label>
+    <nav class="nav-items">
+      ${item('home','Home','stub',false,'<span class="bdot"></span>')}
+      ${item('net','Network','stub')}
+      ${item('jobs','Jobs','go',jobsOn, pending()?`<span class="badge">${pending()}</span>`:'', 'home')}
+      ${item('msg','Messaging','stub',false,'<span class="badge">1</span>')}
+      ${item('bell','Notifications','stub')}
+      <button class="ni" data-act="stub"><div class="avatar" style="width:24px;height:24px;font-size:10px">KH</div><span>Me ▾</span></button>
+      <div class="ni-sep"></div>
+      <button class="ni biz" data-act="stub">${I.grid}<span>For Business ▾</span></button>
+      ${S.premium ? item('learn','Learning','stub') : `<button class="ni prem" data-act="premium">Try Premium for $0</button>`}
+    </nav></div></header>`;
+}
+
+function profileCard(){
+  return `<div class="card prof ${S.premium?'premium':''}">
+    <div class="prof-cover">${S.premium?'<span class="ptag">Premium</span>':''}</div>
+    <div class="avatar prof-av">KH</div>
+    <div class="prof-body">
+      <div class="prof-name">${esc(ME.name)} ${S.premium?PB:''}</div>
+      <div style="font-size:14px;margin-top:4px">${esc(ME.head)}</div>
+      <div class="small muted" style="margin-top:4px;font-size:14px">${ME.loc}</div>
+      <div class="row" style="margin-top:12px;gap:10px">${logo('USC',24)}<b style="font-size:14px">${ME.school}</b></div>
+    </div></div>`;
+}
+function sideList(){
+  return `<div class="card side-list">
+    <a data-act="stub">${I.prefs}<span>Preferences</span></a>
+    <a data-act="go" data-v="tracker">${I.bookmarkF}<span style="flex:1">Job tracker</span>${pending()?`<span class="badge" style="position:static;background:var(--red);color:#fff;font-size:12px;border-radius:10px;padding:0 7px">${pending()}</span>`:''}</a>
+    <a data-act="stub">${I.insights}<span>My Career Insights</span></a>
+    <div class="hr" style="margin:8px 20px"></div>
+    <a class="blue" data-act="stub">${I.post}<span>Post a free job</span></a>
+  </div>`;
+}
+function footer(){
+  return `<div class="foot">
+    <a data-act="stub">About</a><a data-act="stub">Accessibility</a><a data-act="stub">Help Center</a><br>
+    <a data-act="stub">Privacy &amp; Terms ▾</a><a data-act="stub">Ad Choices</a><a data-act="stub">Advertising</a><br>
+    <a data-act="stub">Business Services ▾</a><a data-act="stub">Get the LinkedIn app</a><br><a data-act="stub">More</a>
+    <div class="copy"><span class="wordmark">Linked${LI}</span> LinkedIn Corporation © 2026</div>
+    <div class="small" style="margin-top:6px">Class prototype · MOR 530 · Not affiliated with LinkedIn</div>
+  </div>`;
+}
+
+function jobRow(j, x = true){
+  const r = matchRecord(j);
+  let sub = j.alumni ? `<div class="jsub">${logo('USC',16)}${j.alumni} school alumni work here</div>` : '';
+  let foot = '';
+  if (r && r.source === 'easy') foot = `<span class="applied-txt">Applied ${ago(r.applied)}</span>`;
+  else if (alertFor(j) && S.premium && S.alertsOn) foot = `<span class="prem-txt">${PSQ} You may have applied on another website · ${fmt(alertFor(j).applied)}</span>`;
+  else foot = j.promoted ? 'Promoted' : ago(j.posted);
+  if (j.easy && !(r && r.source === 'easy')) foot += `<span class="dot"></span><span class="easy">${LI} Easy Apply</span>`;
+  return `<div class="jrow" data-act="openJob" data-id="${j.id}">
+    ${logo(j.company,56)}
+    <div style="flex:1;min-width:0">
+      <div class="jt">${esc(j.title)}${I.verified}</div>
+      <div class="jline">${esc(j.company)}<span class="dot"></span>${esc(j.location)} (${j.mode})${j.benefits?`<span class="dot"></span>${j.benefits}`:''}</div>
+      ${sub}
+      <div class="jfoot">${foot}</div>
+    </div>
+    ${x?`<button class="icon-btn" data-act="hideJob" data-id="${j.id}" title="Dismiss">${I.x}</button>`:''}
+  </div>`;
+}
+function jobFoot(j){
+  const r = matchRecord(j);
+  if (r && r.source === 'easy') return `<span class="applied-txt">Applied ${ago(r.applied)}</span>`;
+  const a = alertFor(j);
+  if (a && S.premium && S.alertsOn) return `<span class="prem-txt">${PSQ} You may have applied elsewhere · ${fmt(a.applied)}</span>`;
+  return `${j.promoted?'<span>Promoted</span><span class="dot"></span>':''}<span>${ago(j.posted)}</span>${j.easy?`<span class="dot"></span><span class="easy">${LI} Easy Apply</span>`:''}`;
+}
+
+function viewHome(){
+  const prefJobs = JOBS.filter(j => !S.hidden.includes(j.id)).slice(0, 4);
+  const topJobs = [JOBS[5], JOBS[2]].filter(j => !S.hidden.includes(j.id));
+  return `<div class="wrap"><div class="g2">
+    <aside class="l">${profileCard()}<div style="height:8px"></div>${sideList()}${footer()}</aside>
+    <main>
+      <div class="card"><div class="newband">
+        <div class="ill"><svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M19 5a3 3 0 00-3-3H8a3 3 0 00-3 3v17l7-5 7 5z"/></svg></div>
+        <div style="flex:1;min-width:0">
+          <div class="row"><span class="h3">Job tracker now covers every application</span><span class="tag-new">NEW</span></div>
+          <div class="muted" style="margin-top:2px">Add jobs you applied to on company websites, Indeed, or Handshake. Connect Gmail (optional) to keep stages up to date.</div>
+        </div>
+        <button class="btn bs sm" data-act="go" data-v="tracker">Open Job tracker</button>
+      </div></div>
+
+      <div class="card">
+        <div class="sec-h"><div style="flex:1"><h2>Jobs based on your preferences</h2>
+          <p>Business Analyst or Data Analyst or Product Operations, on-site or hybrid or remote in Los Angeles County, CA or Remote</p></div>
+          <button class="icon-btn" style="box-shadow:inset 0 0 0 1px rgba(0,0,0,.6);width:40px;height:40px" data-act="stub">${I.edit}</button></div>
+        ${prefJobs.map(j => jobRow(j)).join('')}
+        <a class="show-all" data-act="go" data-v="search">Show all →</a>
+      </div>
+
+      <div class="card prem-sec">
+        <div class="sec-h"><div style="flex:1"><div class="prem-k">${PSQ} Premium</div><h2>Jobs where you'd be a top applicant</h2>
+          <p>Based on your profile, the job criteria, and recruiter responses to similar applicants</p></div></div>
+        ${topJobs.map(j => jobRow(j)).join('')}
+        ${S.premium ? '' : `<div style="padding:4px 24px 20px"><button class="btn bgold sm" data-act="premium">Try Premium for $0</button></div>`}
+      </div>
+    </main>
+  </div></div>`;
+}
+
+function viewSearch(){
+  const j = jobById(S.job) || JOBS[0];
+  return `<div class="fbar"><div class="fbar-in">
+      <button class="pill on" data-act="stub">Jobs ▾</button>
+      <button class="pill" data-act="stub">Date posted ▾</button>
+      <button class="pill" data-act="stub">Experience level ▾</button>
+      <button class="pill" data-act="stub">Company ▾</button>
+      <button class="pill" data-act="stub">Remote ▾</button>
+      <button class="pill" data-act="stub">Easy Apply</button>
+      <button class="pill" data-act="stub">All filters</button>
+    </div></div>
+    <div class="split">
+      <div class="jl" data-ks="jl">
+        <div class="jl-head"><b>data analyst</b><div class="small" style="opacity:.85">United States · ${JOBS.length} results</div></div>
+        ${JOBS.map(x => `<div class="jcard ${x.id===j.id?'sel':''}" data-act="openJob" data-id="${x.id}">
+          ${logo(x.company,56)}
+          <div style="flex:1;min-width:0">
+            <div class="jt">${esc(x.title)}${I.verified}</div>
+            <div style="font-size:14px">${esc(x.company)}</div>
+            <div class="muted" style="font-size:14px">${esc(x.location)} (${x.mode})</div>
+            <div class="jfoot">${jobFoot(x)}</div>
+          </div>
+          <button class="icon-btn" data-act="save" data-id="${x.id}" title="Save" style="align-self:flex-start">${S.saved.includes(x.id)?I.bookmarkF:I.bookmark}</button>
+        </div>`).join('')}
+      </div>
+      <div class="jd" data-ks="jd">${jobDetail(j)}</div>
+    </div>`;
+}
+
+function jobDetail(j){
+  const r = matchRecord(j);
+  const a = alertFor(j);
+  let notice = '';
+  if (r && r.source === 'easy'){
+    notice = `<div class="applied-box"><span style="color:var(--green)">${I.check}</span>
+      <div style="flex:1">Applied ${ago(r.applied)} with Easy Apply<span class="dot"></span>Stage: ${stPill(r.status)}</div>
+      <a data-act="openRec" data-id="${r.id}" style="font-weight:600">See in Job tracker</a></div>`;
+  } else if (a && S.premium && S.alertsOn){
+    notice = dupAlert(j, a);
+  } else if (!S.premium && !j.easy){
+    notice = `<div class="teaser">${I.lock}<div style="flex:1"><b style="color:var(--gold)">Premium</b> · Get alerted if this job matches an application you already submitted on another website.</div><button class="btn bgold sm" data-act="premium">Try for $0</button></div>`;
+  } else if (S.premium && !j.easy && S.alertsOn){
+    notice = `<div class="nomatch">${PSQ} No matching application found in your Job tracker.</div>`;
+  }
+  const applyBtn = (r && r.source === 'easy')
+    ? `<button class="btn bp" disabled>${I.check} Applied</button>`
+    : j.easy
+      ? `<button class="btn bp" data-act="easy" data-id="${j.id}">${LI.replace('class="li-mini"','class="li-mini" style="background:#fff;color:var(--blue)"')} Easy Apply</button>`
+      : `<button class="btn bp" data-act="ext" data-id="${j.id}">Apply ${I.ext}</button>`;
+  const saved = S.saved.includes(j.id);
+  return `
+    <div class="row">${logo(j.company,24)}<span style="font-size:14px">${esc(j.company)}</span></div>
+    <h1>${esc(j.title)}${I.verified}</h1>
+    <div class="jd-meta">${esc(j.location)}<span class="dot"></span>${ago(j.posted)}<span class="dot"></span><span class="${j.applicants.startsWith('Be')?'hl':''}">${j.applicants}</span></div>
+    <div class="chips"><span class="chip">${I.jobs.replace('<svg','<svg width="16" height="16"')} ${j.mode}</span><span class="chip">${j.type}</span><span class="chip">${j.level}</span><span class="chip">${j.salary}</span></div>
+    ${notice}
+    <div class="row" style="margin-top:14px">${applyBtn}<button class="btn bs" data-act="save" data-id="${j.id}">${saved?'Saved':'Save'}</button></div>
+    <div class="jd-sec" style="border:1px solid var(--line);padding:16px;border-radius:8px">
+      <div class="row" style="gap:12px">${ghost(1,44)}
+        <div style="flex:1"><div style="font-weight:600">Meet the hiring team</div><div class="small muted">Recruiter · ${esc(j.company)} · Job poster</div></div>
+        <button class="btn bm sm" data-act="stub">Message</button>
+      </div>
+    </div>
+    <div class="jd-sec"><h2>About the job</h2>
+      <p>${esc(j.about)}</p>
+      <p style="margin-top:12px"><b>What you'll do</b></p><ul>${RESP_A.map(x=>`<li>${x}</li>`).join('')}</ul>
+      <p><b>What we're looking for</b></p><ul>${QUAL_A.map(x=>`<li>${x}</li>`).join('')}</ul>
+      <p class="small muted">Job ID: ${j.jobId}</p>
+    </div>`;
+}
+
+function dupAlert(j, r){
+  const why = S.why ? `<div class="dup-why"><b>Why am I seeing this?</b> This posting looks similar to a job in your tracker:
+      <ul><li>Company: ${esc(r.company)} ✓</li><li>Job title: ${esc(r.role)} ✓</li>${r.location?`<li>Location: ${esc(r.location)} ${norm(r.location).startsWith(norm(j.location))?'✓':'(different)'}</li>`:''}${r.jobId?`<li>Job ID: ${esc(r.jobId)} ${r.jobId===j.jobId?'✓':''}</li>`:''}</ul>
+      <div style="margin-top:4px">Matches are suggestions, not certainty. Employers never see your Job tracker.</div></div>` : '';
+  return `<div class="dup" role="status">
+    <div class="dup-k">${PSQ} Premium</div>
+    <div class="dup-h">You may have applied to this job on another website</div>
+    <div class="dup-rec">${logo(r.company,40)}
+      <div style="flex:1;min-width:0;line-height:1.35">
+        <div style="font-weight:600">${esc(r.role)} · ${esc(r.company)}</div>
+        <div class="small muted">Applied ${fmtL(r.applied)} via ${esc(viaShort(r))}<span class="dot"></span>${r.source==='gmail'?'Added from Gmail':'Added by you'}</div>
+      </div>${stPill(r.status)}</div>
+    <div class="row" style="flex-wrap:wrap">
+      <button class="btn bs sm" data-act="openRec" data-id="${r.id}">${I.eye} View in Job tracker</button>
+      <button class="btn bt sm" data-act="report" data-id="${j.id}">${I.flag} Report incorrect match</button>
+      <a class="small" data-act="why" style="margin-left:auto">${S.why?'Hide details':'Why am I seeing this?'}</a>
+    </div>
+    ${why}
+    <div class="small muted" style="margin-top:8px">This is only a reminder — you can still apply below.</div>
+  </div>`;
+}
+
+/* ---------- Job tracker ---------- */
+function viewTracker(){
+  const pill = (k, label) => `<button class="pill ${S.tab===k?'on':''}" data-act="tab" data-v="${k}">${label}</button>`;
+  return `<div class="trk"><div class="card trk-card">
+    <div class="trk-title">
+      <button class="icon-btn" data-act="go" data-v="home" aria-label="Back" style="color:var(--t1)">${I.back}</button>
+      <h1 style="flex:1">Job tracker</h1>
+      <button class="btn bt sm" data-act="manage">${I.gear} Manage</button>
+      <button class="btn bp sm" data-act="add">${I.plus} Add job</button>
+    </div>
+    ${gmailBand()}
+    ${suggestions()}
+    <div class="pills">
+      ${pill('Saved', `Saved · ${S.saved.length}`)}
+      <button class="pill" data-act="tab" data-v="In Progress">In Progress · 0 ▾</button>
+      ${pill('Applied', `Applied · ${count('Applied')}`)}
+      ${pill('Interview', `Interview · ${count('Interview')}`)}
+      ${pill('Offer', `Offer · ${count('Offer')}`)}
+      ${pill('Archived', 'Archived')}
+      <span style="flex:1"></span>
+      <select class="selpill" data-chg="src" aria-label="Where you applied">
+        <option value="all" ${S.src==='all'?'selected':''}>All sources</option>
+        <option value="li" ${S.src==='li'?'selected':''}>Applied on LinkedIn</option>
+        <option value="ext" ${S.src==='ext'?'selected':''}>Applied elsewhere</option>
+      </select>
+    </div>
+    ${trackerTable()}
+    <div class="notseeing">Not seeing some jobs? <a data-act="add">Add a job you applied to elsewhere</a>${S.gmail?'':` or <a data-act="gmail">connect Gmail</a>`}.</div>
+  </div></div>`;
+}
+function trackerTable(){
+  if (S.tab === 'Saved'){
+    const js = S.saved.map(jobById);
+    if (!js.length) return `<div class="empty">No saved jobs yet. Tap the bookmark on any job to save it.</div>`;
+    return `<table class="tt"><thead><tr><th></th><th>Jobs</th><th class="hide-m"></th><th></th></tr></thead><tbody>${js.map(j => `<tr class="r" data-act="openJob" data-id="${j.id}">
+      <td><input type="checkbox" class="cb"></td>
+      <td><div class="jobcell">${logo(j.company,64)}<div><div class="ttl">${esc(j.title)}${I.verified}</div><div class="co">${esc(j.company)} · ${esc(j.location)} (${j.mode})</div><div class="meta">Posted ${ago(j.posted)}</div></div></div></td>
+      <td class="hide-m"></td><td class="stagecell"><button class="btn bp sm" data-act="openJob" data-id="${j.id}">${j.easy?'Easy Apply':'Apply'}</button></td></tr>`).join('')}</tbody></table>`;
+  }
+  if (S.tab === 'In Progress') return `<div class="empty">Jobs you started applying to on LinkedIn will show up here.</div>`;
+  const rows = S.records
+    .filter(r => r.status === S.tab)
+    .filter(r => S.src === 'all' || (S.src === 'li' ? r.source === 'easy' : r.source !== 'easy'))
+    .sort((a, b) => b.applied.localeCompare(a.applied));
+  if (!rows.length) return `<div class="empty">No jobs in ${S.tab} yet.<br><br><button class="btn bs sm" data-act="add">${I.plus} Add job</button></div>`;
+  return `<table class="tt"><thead><tr>
+      <th><input type="checkbox" class="cb" style="margin:0" data-chg="all"></th><th>Jobs</th><th class="hide-m">Connections</th><th class="hide-m">Notes</th><th></th><th style="width:44px"></th>
+    </tr></thead><tbody id="tbody">${rows.map(trRow).join('')}</tbody></table>`;
+}
+function trRow(r){
+  let srcl = '';
+  if (r.source === 'gmail') srcl = `<span class="srcline">${GM} Added from Gmail · ${esc(viaShort(r))}</span>`;
+  else if (r.source === 'manual') srcl = `<span class="srcline">${I.globe} Applied on ${esc(viaShort(r) === 'Company website' ? 'company website' : viaShort(r))} · added by you</span>`;
+  const when = r.source === 'easy'
+    ? `Applied ${ago(r.applied, true)}${r.posted?` (Posted ${ago(r.posted, true)})`:''}`
+    : `Applied ${fmt(r.applied)} · ${ago(r.applied, true)}`;
+  const last = r.tl[r.tl.length - 1];
+  const ev = r.emails.length && last ? `<div class="ev"><span class="sdot"></span>${esc(last.t.replace(/ —.*/, ''))}</div>` : r.event ? `<div class="ev"><span class="sdot"></span>${esc(r.event)}</div>` : '';
+  let right;
+  if (r.status === 'Applied' && !r.heardNo){
+    right = `<div class="hear"><b>Did you hear back?</b><button class="yn" data-act="heardYes" data-id="${r.id}">Yes</button><button class="yn" data-act="heardNo" data-id="${r.id}">No</button></div>`;
+  } else if (r.status === 'Applied'){
+    right = `<div class="stagecell small muted">We'll check in again in a week</div>`;
+  } else right = `<div class="stagecell">${stPill(r.status)}</div>`;
+  return `<tr class="r ${S.flash===r.id?'flash':''}" data-act="openRec" data-id="${r.id}">
+    <td><input type="checkbox" class="cb" ${S.checked.includes(r.id)?'checked':''} data-chg="check" data-id="${r.id}"></td>
+    <td><div class="jobcell">${logo(r.company,64)}<div style="min-width:0">
+      <div class="ttl">${esc(r.role || 'Untitled role')}${r.source==='easy'?I.verified:''}</div>
+      <div class="co">${esc(r.company)}${r.location?' · '+esc(r.location):''}</div>
+      <div class="meta">${when}</div>${ev}${srcl}</div></div></td>
+    <td class="hide-m"><div class="conns">${r.conns ? ghost(Math.min(r.conns, 3)) + (r.conns > 3 ? `<span class="ghost" style="width:32px;height:32px;align-items:center;font-size:12px;color:var(--t2);background:#eef0f2">+${r.conns-3}</span>` : '') : '<span class="muted" style="padding-top:6px">—</span>'}</div></td>
+    <td class="hide-m">${r.notes ? `<div class="notetxt" title="${esc(r.notes)}">${esc(r.notes)}</div>` : `<button class="addnote" data-act="openRec" data-id="${r.id}" data-note="1">${I.plus} Add note</button>`}</td>
+    <td>${right}</td>
+    <td><div class="menuwrap"><button class="icon-btn" data-act="menu" data-id="${r.id}" aria-label="More actions">${I.dots}</button>
+      ${S.menu === r.id ? `<div class="menu">
+        <button data-act="stageModal" data-id="${r.id}">${I.stage} Change stage</button>
+        <button data-act="edit" data-id="${r.id}">${I.edit.replace('width="16" height="16"','')} Edit details</button>
+        ${r.status !== 'Archived' ? `<button data-act="archive" data-id="${r.id}">${I.archive} Archive</button>` : ''}
+        <button data-act="del" data-id="${r.id}">${I.trash.replace('width="18" height="18"','')} Delete</button>
+      </div>` : ''}</div></td>
+  </tr>`;
+}
+function gmailBand(){
+  if (!S.gmail) return `<div class="gband">
+    <div class="g-ic"><span class="gm" style="width:24px;height:24px;font-size:15px">M</span></div>
+    <div style="flex:1;min-width:200px"><div style="font-weight:600;font-size:15px">Track applications from anywhere <span class="tag-new" style="margin-left:4px">NEW</span></div>
+      <div class="small muted" style="font-size:13px">Connect Gmail (optional) and we'll suggest jobs you applied to off LinkedIn and answer "Did you hear back?" for you. Nothing is added until you review it.</div></div>
+    <button class="btn bs sm" data-act="gmail">Connect Gmail</button></div>`;
+  return `<div class="gband">
+    <div class="g-ic"><span class="gm" style="width:24px;height:24px;font-size:15px">M</span></div>
+    <div style="flex:1"><div class="row"><span style="font-weight:600;font-size:15px">Gmail connected</span><span style="color:var(--green)">${I.check}</span></div>
+      <div class="small muted" style="font-size:13px">${ME.email} · Synced ${S.synced||'just now'} · Only job-application emails are processed</div></div>
+    <button class="btn bt sm" data-act="manage">Manage</button></div>`;
+}
+function suggestions(){
+  if (!S.gmail || !S.sugg.length) return '';
+  const hi = S.sugg.filter(s => s.conf === 'hi').length;
+  return `<div class="sugg" id="sugg">
+    <div class="sugg-h">${GM}<div class="h3" style="flex:1">${S.sugg.length} update${S.sugg.length>1?'s':''} from Gmail to review</div>
+      ${hi>1?`<button class="btn bs sm" data-act="acceptAll">Accept ${hi} high-confidence</button>`:''}</div>
+    ${S.sugg.map(sugCard).join('')}</div>`;
+}
+function sugCard(s){
+  const target = s.action === 'update' ? rec(s.target) : null;
+  const what = target
+    ? `<div style="margin-top:8px"><b>Update stage</b> · ${esc(target.role)} at ${esc(target.company)}: ${stPill(target.status)}<span class="arrow">→</span>${stPill(s.newStatus)}</div>`
+    : `<div class="row" style="margin-top:8px;gap:12px;align-items:flex-start">${logo(s.company,40)}<div style="flex:1;min-width:0">
+        ${s.role ? `<div style="font-weight:600">${esc(s.role)}</div>` : `<input id="sr-${s.id}" placeholder="Add job title (required)" style="border:1px solid #b24020;border-radius:4px;padding:5px 8px;width:100%;max-width:280px">`}
+        <div class="small muted">${esc(s.company)}${s.location?' · '+esc(s.location):''} · Applied ${fmt(s.date)} on company website</div></div>${stPill(s.status)}</div>`;
+  const open = S.openMail[s.id];
+  return `<div class="sc">
+    <div class="sc-top"><span class="ktag k-${s.kind}">${s.label}</span><span>${esc(s.from)}</span><span class="dot"></span><span>${fmt(s.date)}</span>
+      <span style="margin-left:auto" class="conf ${s.conf}">${s.conf==='hi'?I.check+' High-confidence match':I.info+' Needs your review'}</span></div>
+    ${what}
+    <div class="small muted" style="margin-top:6px">${esc(s.why)}</div>
+    ${open ? `<div class="mail"><div class="sub">${esc(s.subject)}</div><div class="small muted">From ${esc(s.from)} · ${fmtL(s.date)}</div><div style="margin-top:6px">${esc(s.body)}</div><div class="small muted" style="margin-top:6px">${I.lock} Only this message was processed. We keep the company, role, date, and stage — not the full email.</div></div>` : ''}
+    <div class="row" style="margin-top:10px;flex-wrap:wrap">
+      <button class="btn bp sm" data-act="sAccept" data-id="${s.id}">Accept</button>
+      <button class="btn bs sm" data-act="sEdit" data-id="${s.id}">Edit</button>
+      <button class="btn bt sm" data-act="sDismiss" data-id="${s.id}">Dismiss</button>
+      <a class="small" style="margin-left:auto" data-act="sMail" data-id="${s.id}">${open?'Hide source email':'View source email'}</a>
+    </div></div>`;
+}
+
+/* ---------- drawer ---------- */
+function drawer(){
+  const r = rec(S.drawer); if (!r) return '';
+  const linked = JOBS.find(j => norm(j.company) === norm(r.company) && norm(j.title) === norm(r.role));
+  return `<div class="dscrim" data-act="closeDrawer"></div>
+  <aside class="drawer" role="dialog" aria-label="Job details">
+    <div class="dh">${logo(r.company,48)}
+      <div style="flex:1;min-width:0"><div class="h3" style="font-size:18px">${esc(r.role || 'Untitled role')}</div><div class="muted">${esc(r.company)}${r.location?' · '+esc(r.location):''}</div></div>
+      <button class="icon-btn" data-act="closeDrawer" aria-label="Close">${I.x}</button></div>
+    <div class="db">
+      <div class="row between"><span class="muted">Stage</span><div class="row">${stPill(r.status)}<a class="small" data-act="stageModal" data-id="${r.id}">Change</a></div></div>
+      <dl class="kv">
+        <dt>Applied</dt><dd>${fmtL(r.applied)}, 2026</dd>
+        <dt>Applied via</dt><dd>${esc(r.via||'—')}</dd>
+        <dt>Added</dt><dd>${r.source==='easy'?`${LI} Automatically (Easy Apply)`:r.source==='gmail'?`${GM} From Gmail, approved by you`:'By you'}</dd>
+        <dt>Job ID</dt><dd>${esc(r.jobId||'—')}</dd>
+        <dt>Last update</dt><dd>${fmtL(r.updated)}</dd>
+        ${linked?`<dt>LinkedIn post</dt><dd><a data-act="openJob" data-id="${linked.id}">View job ${I.ext}</a></dd>`:''}
+      </dl>
+      <div class="sec-t">Activity</div>
+      <ul class="tl">${[...r.tl].reverse().map(e => `<li>${esc(e.t)}<small>${fmtL(e.d)}</small></li>`).join('')}</ul>
+      ${r.emails.length ? `<div class="sec-t">Source emails</div>${r.emails.map(m => `<div class="mail" style="margin-top:6px"><div class="sub">${esc(m.subject)}</div><div class="small muted">${esc(m.from)} · ${fmtL(m.date)}</div></div>`).join('')}` : ''}
+      <div class="sec-t">Notes</div>
+      <textarea class="note" id="note" placeholder="Add follow-up notes, contacts, interview prep…">${esc(r.notes)}</textarea>
+      <div class="row" style="justify-content:flex-end;margin-top:8px"><button class="btn bs sm" data-act="saveNote" data-id="${r.id}">Save note</button></div>
+    </div>
+    <div class="mf" style="justify-content:space-between">
+      <button class="btn bt sm" style="color:var(--red)" data-act="del" data-id="${r.id}">${I.trash} Delete</button>
+      <button class="btn bm sm" data-act="edit" data-id="${r.id}">${I.edit} Edit details</button>
+    </div>
+  </aside>`;
+}
+
+/* ---------- modals ---------- */
+const mHead = t => `<div class="mh"><h2>${t}</h2><button class="icon-btn" data-act="closeModal" aria-label="Dismiss">${I.x}</button></div>`;
+function modal(){
+  const m = S.modal; if (!m) return '';
+  let body = '';
+  switch (m.type){
+    case 'gmail': body = gmailModal(m); break;
+    case 'edit': body = editModal(m); break;
+    case 'stage': body = stageModal(m); break;
+    case 'easy': body = easyModal(m); break;
+    case 'ext': body = extModal(m); break;
+    case 'report': body = reportModal(m); break;
+    case 'premium': body = premiumModal(); break;
+    case 'manage': body = manageModal(); break;
+    case 'confirm': body = `${mHead(m.title)}<div class="mb"><p>${m.text}</p></div><div class="mf"><button class="btn bm" data-act="closeModal">Cancel</button><button class="btn bdanger" data-act="${m.ok}" data-id="${m.id||''}">${m.okLabel}</button></div>`; break;
+  }
+  return `<div class="scrim" data-act="scrim"><div class="modal" role="dialog" aria-modal="true">${body}</div></div>`;
+}
+
+function gmailModal(m){
+  if (m.step === 'intro') return `${mHead('Connect Gmail to Job tracker')}
+    <div class="mb">
+      <p class="muted">Gmail is optional. You can always add jobs by hand. If you connect it, here's exactly what happens:</p>
+      <div class="perm" style="margin-top:8px"><div class="perm-ic" style="background:var(--blue-l);color:var(--blue)">${I.mail}</div>
+        <div><b>What LinkedIn looks for</b><ul><li>Application confirmations ("Thank you for applying")</li><li>Interview invitations</li><li>Rejection and offer emails</li></ul></div></div>
+      <div class="perm"><div class="perm-ic" style="background:#fdecec;color:var(--red)">${I.lock}</div>
+        <div><b>What we never do</b><ul><li>Keep emails that aren't about job applications</li><li>Share your Job tracker with employers or recruiters</li><li>Use your email for ads</li></ul></div></div>
+      <div class="perm"><div class="perm-ic" style="background:var(--green-l);color:var(--green)">${I.shield}</div>
+        <div><b>You stay in control</b><ul><li>Review every suggestion before it's added</li><li>Edit or delete any job</li><li>Disconnect and delete imported data anytime</li></ul></div></div>
+    </div>
+    <div class="mf"><button class="btn bt" data-act="closeModal">Not now</button><button class="btn bp" data-act="gGoogle">Continue to Google</button></div>`;
+  if (m.step === 'google') return `${mHead('Sign in')}
+    <div class="mb"><div class="gwin">
+      <div class="gword"><span style="color:#4285f4">G</span><span style="color:#ea4335">o</span><span style="color:#fbbc05">o</span><span style="color:#4285f4">g</span><span style="color:#34a853">l</span><span style="color:#ea4335">e</span></div>
+      <div style="font-size:22px;margin-top:12px;color:#202124">LinkedIn wants access to your Google Account</div>
+      <div class="acct"><div class="avatar" style="width:22px;height:22px;font-size:9px">KH</div>${ME.email}</div>
+      <div class="gperm"><b>This will allow LinkedIn to:</b>
+        <div class="row" style="margin-top:10px;align-items:flex-start">${GM}<span>Read emails that look like job-application updates (read-only). LinkedIn can't send, delete, or change your email.</span></div></div>
+      <div class="small" style="color:#5f6368;text-align:left">Prototype screen — no real account is connected.</div>
+      <div class="row" style="justify-content:flex-end;margin-top:16px"><button class="gbtn2" data-act="closeModal">Cancel</button><button class="gbtn" data-act="gAllow">Allow</button></div>
+    </div></div>`;
+  if (m.step === 'scan'){
+    const msgs = ['Connecting securely…', 'Checking emails from the last 90 days…', 'Found 4 job-related emails', 'Matching them to your Job tracker…'];
+    return `${mHead('Setting up Job tracker')}
+      <div class="mb" style="padding:32px 24px">
+        <div class="row" style="gap:14px;margin-bottom:16px">${GM.replace('class="gm"','class="gm" style="width:36px;height:36px;font-size:22px"')}<div><div class="h3">${msgs[m.i||0]}</div><div class="small muted">Unrelated emails are skipped and never stored.</div></div></div>
+        <div class="prog"><div style="width:${[12,45,75,96][m.i||0]}%"></div></div>
+        <div class="small muted" style="margin-top:10px">${[0,312,1284,1284][m.i||0].toLocaleString()} emails checked · ${[0,1,4,4][m.i||0]} application emails</div>
+      </div>`;
+  }
+  return `${mHead('Gmail connected')}
+    <div class="mb" style="text-align:center;padding:28px 24px">
+      <div style="width:56px;height:56px;border-radius:50%;background:var(--green-l);color:var(--green);display:flex;align-items:center;justify-content:center;margin:0 auto">${I.check.replace('width="16" height="16"','width="28" height="28"')}</div>
+      <div class="h2" style="margin-top:14px">We found 4 updates</div>
+      <p class="muted" style="margin-top:6px">1 stage update and 3 jobs you applied to outside LinkedIn. Nothing has been added yet — take a look and accept what's right.</p>
+    </div>
+    <div class="mf"><button class="btn bp" data-act="review">Review updates</button></div>`;
+}
+
+function stageModal(m){
+  const r = rec(m.id);
+  return `${mHead(m.heard ? 'Great! What\'s the latest?' : 'Change stage')}
+    <div class="mb"><div class="row" style="gap:12px;margin-bottom:8px">${logo(r.company,40)}<div><b>${esc(r.role)}</b><div class="small muted">${esc(r.company)}</div></div></div>
+      ${STAGES.map(s => `<label class="radio"><input type="radio" name="stg" value="${s}" ${s===(m.heard?'Interview':r.status)?'checked':''}><span><b>${s==='Archived'?'Archived':s}</b><div class="small muted">${STAGE_HINT[s]}</div></span></label>`).join('')}
+    </div>
+    <div class="mf"><button class="btn bm" data-act="closeModal">Cancel</button><button class="btn bp" data-act="stageSave" data-id="${r.id}">Save</button></div>`;
+}
+
+function editModal(m){
+  const r = m.id ? rec(m.id) : (m.pre || {});
+  const isEdit = !!m.id;
+  const v = k => esc(r[k] || '');
+  const vias = ['Company website', 'LinkedIn', 'Indeed', 'Handshake', 'Referral', 'Other'];
+  const curVia = viaShort(r) || 'Company website';
+  return `${mHead(isEdit ? 'Edit job' : m.sid ? 'Edit suggestion' : 'Add a job you applied to')}
+    <div class="mb">
+      ${!isEdit && !m.sid ? `<p class="small muted" style="margin-bottom:14px">Applied somewhere other than LinkedIn? Add it here so all your applications live in one place.</p>` : ''}
+      <div class="fld" id="f-company"><label>Company*</label><input id="e-company" value="${v('company')}" placeholder="Ex: Google"><div class="err">Please enter a company.</div></div>
+      <div class="fld" id="f-role"><label>Job title*</label><input id="e-role" value="${v('role')}" placeholder="Ex: Data Analyst"><div class="err">Please enter a job title.</div></div>
+      <div class="f2">
+        <div class="fld"><label>Location</label><input id="e-location" value="${v('location')}" placeholder="Ex: Los Angeles, CA"></div>
+        <div class="fld"><label>Applied on</label><input id="e-applied" type="date" value="${r.applied || TODAY}" max="${TODAY}"></div>
+      </div>
+      <div class="f2">
+        <div class="fld"><label>Stage</label><select id="e-status">${STAGES.map(s => `<option ${s===(r.status||'Applied')?'selected':''}>${s}</option>`).join('')}</select></div>
+        <div class="fld"><label>Where did you apply?</label><select id="e-via">${vias.map(x => `<option ${x===curVia?'selected':''}>${x}</option>`).join('')}</select></div>
+      </div>
+      <div class="fld"><label>Job ID or requisition number</label><input id="e-jobId" value="${v('jobId')}" placeholder="Helps us recognize this job on LinkedIn"></div>
+      ${isEdit ? '' : `<div class="fld"><label>Notes</label><textarea id="e-notes" rows="2" placeholder="Optional">${v('notes')}</textarea></div>`}
+    </div>
+    <div class="mf"><button class="btn bm" data-act="closeModal">Cancel</button><button class="btn bp" data-act="saveRec">${isEdit ? 'Save' : 'Add to Job tracker'}</button></div>`;
+}
+
+function easyModal(m){
+  const j = jobById(m.id);
+  if (m.step === 3) return `${mHead('Application sent')}
+    <div class="mb" style="text-align:center;padding:28px 24px">
+      <div style="width:56px;height:56px;border-radius:50%;background:var(--green-l);color:var(--green);display:flex;align-items:center;justify-content:center;margin:0 auto">${I.check.replace('width="16" height="16"','width="28" height="28"')}</div>
+      <div class="h2" style="margin-top:14px">Your application was sent to ${esc(j.company)}</div>
+      <p class="muted" style="margin-top:6px">You can track it in Job tracker under Applied.</p>
+    </div>
+    <div class="mf"><button class="btn bm" data-act="closeModal">Done</button><button class="btn bp" data-act="viewNew">View in Job tracker</button></div>`;
+  const pct = m.step === 1 ? 50 : 100;
+  const step1 = `<div class="h3">Contact info</div>
+      <div class="row" style="gap:12px;margin:12px 0 16px"><div class="avatar" style="width:56px;height:56px;font-size:20px">KH</div><div><b>${esc(ME.name)}</b><div class="small muted">${esc(ME.head)}</div><div class="small muted">${ME.loc}</div></div></div>
+      <div class="fld"><label>Email address*</label><select><option>${ME.email}</option></select></div>
+      <div class="fld"><label>Mobile phone number*</label><input value="(213) 555-0147"></div>
+      <div class="h3" style="margin-top:6px">Resume</div>
+      <div class="row" style="border:1px solid var(--green);border-radius:8px;padding:10px 12px;margin-top:8px;gap:12px">
+        <div style="background:#c33;color:#fff;font-weight:700;font-size:11px;padding:10px 6px;border-radius:4px">PDF</div>
+        <div style="flex:1"><b>Kiki_Huang_Resume.pdf</b><div class="small muted">Last used on ${fmt('2026-10-02')}</div></div><span style="color:var(--green)">${I.check}</span></div>`;
+  const step2 = `<div class="h3">Review your application</div>
+      <p class="small muted" style="margin:4px 0 12px">The employer will also receive a copy of your profile.</p>
+      <dl class="kv"><dt>Email</dt><dd>${ME.email}</dd><dt>Phone</dt><dd>(213) 555-0147</dd><dt>Resume</dt><dd>Kiki_Huang_Resume.pdf</dd></dl>
+      <label class="radio" style="margin-top:8px"><input type="checkbox" checked><span>Follow ${esc(j.company)} to stay up to date with their page.</span></label>`;
+  return `${mHead('Apply to ' + esc(j.company))}
+    <div class="mb"><div class="prog" style="margin-bottom:4px"><div style="width:${pct}%"></div></div><div class="small muted" style="text-align:right;margin-bottom:12px">${pct}%</div>
+      ${m.step === 1 ? step1 : step2}</div>
+    <div class="mf">${m.step === 2 ? '<button class="btn bs" data-act="easyBack">Back</button>' : ''}<button class="btn bp" data-act="${m.step===1?'easyNext':'easySubmit'}">${m.step===1?'Next':'Submit application'}</button></div>`;
+}
+
+function extModal(m){
+  const j = jobById(m.id);
+  if (m.step === 1) return `${mHead('Continue to ' + esc(j.company) + '\'s website')}
+    <div class="mb"><p>You'll finish this application on ${esc(j.company)}'s careers site.</p>
+      <p class="small muted" style="margin-top:8px">${I.info} When you come back, we'll ask if you applied so we can add it to Job tracker. Opening a link doesn't count as applying.</p></div>
+    <div class="mf"><button class="btn bm" data-act="closeModal">Cancel</button><button class="btn bp" data-act="extGo">Continue ${I.ext}</button></div>`;
+  return `${mHead('Welcome back')}
+    <div class="mb"><div class="row" style="gap:12px">${logo(j.company,48)}<div><b>${esc(j.title)}</b><div class="small muted">${esc(j.company)} · ${esc(j.location)}</div></div></div>
+      <div class="h3" style="margin-top:16px">Did you apply?</div>
+      <p class="small muted" style="margin-top:4px">If so, we'll add it to Job tracker so you don't have to remember it later.</p></div>
+    <div class="mf"><button class="btn bm" data-act="closeModal">Not yet</button><button class="btn bp" data-act="extYes">Yes, I applied</button></div>`;
+}
+
+function reportModal(m){
+  const opts = ['This is a different job (same company, different role)', 'This is a different location', 'This is a reposted job — I want to apply again', 'I don\'t recognize this application', 'Something else'];
+  return `${mHead('Report incorrect match')}
+    <div class="mb"><p class="muted">Tell us what's wrong. We'll stop showing this alert for this job. <b>Your Job tracker entry won't be deleted.</b></p>
+      <div style="margin-top:10px">${opts.map((o,i) => `<label class="radio"><input type="radio" name="rr" value="${i}" ${i===0?'checked':''}><span>${o}</span></label>`).join('')}</div>
+      <div class="fld" style="margin-top:8px"><label>Anything else? (optional)</label><textarea rows="2" id="rr-note"></textarea></div>
+      <p class="small muted">${I.info} Reports are reviewed to improve matching over time.</p></div>
+    <div class="mf"><button class="btn bm" data-act="closeModal">Cancel</button><button class="btn bp" data-act="reportSubmit" data-id="${m.id}">Submit</button></div>`;
+}
+
+function premiumModal(){
+  if (S.premium) return `${mHead('Your Premium features')}
+    <div class="mb"><div class="row">${PSQ}<b>Premium Career · Free trial active</b></div>
+      <p class="muted" style="margin-top:8px">Cross-platform duplicate alerts are ${S.alertsOn?'on':'off'}. You can change this in Job tracker → Manage.</p></div>
+    <div class="mf"><button class="btn bm" data-act="endTrial">End trial (demo)</button><button class="btn bp" data-act="closeModal">Done</button></div>`;
+  const f = (t, d, isNew) => `<div style="border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin-bottom:10px">${isNew?'<span style="background:#fde8cc;color:#5c3a07;font-size:12px;font-weight:600;padding:2px 8px;border-radius:4px;margin-right:6px">NEW</span>':''}<b>${t}</b><div class="small muted" style="margin-top:4px;font-size:14px">${d}</div></div>`;
+  return `<div class="prem-hero">
+      <button class="icon-btn" data-act="closeModal" style="position:absolute;right:10px;top:10px">${I.x}</button>
+      <div class="row">${PSQ}<b>Premium Career</b></div>
+      <div style="font-size:28px;font-weight:600;margin-top:10px;line-height:1.2">Find and land a job</div>
+      <div class="muted" style="margin-top:4px">Get started with these top features.</div></div>
+    <div class="mb">
+      ${f('Duplicate application alerts', 'Know when a LinkedIn job may match an application you recorded from another website — before you spend time on it again.', true)}
+      ${f('Get hired faster. Apply where you\'d be a top applicant.', 'See jobs where your profile stands out.')}
+      ${f('See who\'s viewed your profile', 'Expand your reach with recruiters and hiring managers.')}
+      <div class="small muted">Job tracker and Gmail import stay free for everyone. Prototype only — no payment is collected.</div>
+    </div>
+    <div class="mf"><button class="btn bt" data-act="closeModal">Maybe later</button><button class="btn bp" data-act="startTrial">Try Premium for $0</button></div>`;
+}
+
+function manageModal(){
+  const gm = S.records.filter(r => r.source === 'gmail').length;
+  return `${mHead('Job tracker privacy & data')}
+    <div class="mb">
+      <div class="set-row"><div><b>Gmail connection</b><div class="small muted">${S.gmail ? `Connected as ${ME.email}. Only job-application emails are processed.` : 'Not connected. You can add jobs manually.'}</div>
+        ${S.gmail ? `<label class="radio small" style="padding:6px 0 0"><input type="checkbox" id="delImported"><span>Also delete ${gm} job${gm===1?'':'s'} imported from Gmail</span></label>` : ''}</div>
+        ${S.gmail ? `<button class="btn bm sm" data-act="disconnect">Disconnect</button>` : `<button class="btn bs sm" data-act="gmail">Connect</button>`}</div>
+      <div class="set-row"><div><div class="row"><b>Duplicate application alerts</b>${PSQ}</div><div class="small muted">${S.premium ? 'Show a reminder when a LinkedIn job may match a job in your tracker.' : 'Available with Premium.'}</div></div>
+        ${S.premium ? `<button class="tog ${S.alertsOn?'on':''}" data-act="toggleAlerts" aria-label="Duplicate alerts"></button>` : `<button class="btn bgold sm" data-act="premium">Try Premium</button>`}</div>
+      <div class="set-row"><div><b>Who can see my Job tracker</b><div class="small muted">Only you. It's never shared with employers, recruiters, or your network.</div></div><span class="small muted row" style="gap:4px">${I.lock} Private</span></div>
+      <div class="set-row"><div><b>Delete all Job tracker data</b><div class="small muted">Removes every tracked job and suggestion.</div></div><button class="btn bt sm" style="color:var(--red)" data-act="delAll">Delete all</button></div>
+    </div>
+    <div class="mf"><button class="btn bp" data-act="closeModal">Done</button></div>`;
+}
+
+/* ---------- dock + prototype panel ---------- */
+function dock(){
+  return `<button class="dock" data-act="stub"><div class="avatar" style="width:32px;height:32px;font-size:12px;box-shadow:0 0 0 2px #fff">KH</div><b>Messaging</b>
+    <span style="background:var(--red);border-radius:9px;font-size:11px;font-weight:700;padding:0 6px;margin-right:auto;margin-left:-4px">1</span>
+    ${I.dots}${I.compose}${I.chevup}</button>`;
+}
+function proto(){
+  const btn = `<button class="proto-btn" data-act="protoT">⚙ Prototype</button>`;
+  if (!S.proto) return `<div class="proto">${btn}</div>`;
+  return `<div class="proto"><div class="proto-card">
+      <div class="row between"><h4>Prototype controls</h4><button class="icon-btn" style="color:#aaa;width:24px;height:24px" data-act="protoT">${I.x.replace('width="24" height="24"','width="16" height="16"')}</button></div>
+      <div class="small" style="color:#9aa3ab;margin-bottom:6px">MOR 530 · Team 3 · Job tracker for every application</div>
+      <div class="pr"><span>Premium member</span><button class="tog ${S.premium?'on':''}" data-act="protoPrem"></button></div>
+      <div class="small" style="color:#9aa3ab;margin:10px 0 0">Demo flows</div>
+      <button class="jump" data-act="go" data-v="home"><span>1</span>Jobs home</button>
+      <button class="jump" data-act="go" data-v="tracker"><span>2</span>Job tracker (free)</button>
+      <button class="jump" data-act="gmail"><span>3</span>Connect Gmail → review updates</button>
+      <button class="jump" data-act="jumpDup"><span>4</span>Premium duplicate alert</button>
+      <button class="jump" data-act="openJob" data-id="j4"><span>5</span>Easy Apply → auto-tracked</button>
+      <button class="jump" data-act="openJob" data-id="j6"><span>6</span>External apply → add to tracker</button>
+      <button class="rst" data-act="reset">↺ Reset demo data</button>
+    </div>${btn}</div>`;
+}
+
+/* =========================================================
+   Render
+   ========================================================= */
+function render(){
+  const keep = {};
+  document.querySelectorAll('[data-ks]').forEach(el => keep[el.dataset.ks] = el.scrollTop);
+  const v = S.view === 'search' ? viewSearch() : S.view === 'tracker' ? viewTracker() : viewHome();
+  document.getElementById('app').innerHTML = nav() + v + dock();
+  document.querySelectorAll('[data-ks]').forEach(el => {
+    if (el.dataset.ks === 'jd' && S._resetDetail) return;
+    if (keep[el.dataset.ks] != null) el.scrollTop = keep[el.dataset.ks];
+  });
+  S._resetDetail = false;
+  renderOv();
+  document.getElementById('proto').innerHTML = proto();
+}
+function renderOv(){ document.getElementById('ov').innerHTML = drawer() + modal(); }
+
+let tt;
+function toast(msg, link){
+  clearTimeout(tt);
+  document.getElementById('toast').innerHTML = `<div class="toast"><span class="ok">${I.check}</span><div style="flex:1">${msg}${link?` <a data-act="${link.act}" ${link.id?`data-id="${link.id}"`:''} ${link.v?`data-v="${link.v}"`:''} style="font-weight:600">${link.label}</a>`:''}</div><button class="icon-btn" data-act="closeToast" style="width:28px;height:28px">${I.x.replace('width="24" height="24"','width="16" height="16"')}</button></div>`;
+  tt = setTimeout(() => document.getElementById('toast').innerHTML = '', 5000);
+}
+
+/* =========================================================
+   Actions
+   ========================================================= */
+function flash(id){ S.flash = id; setTimeout(() => S.flash = null, 1700); }
+function addRecord(o){
+  const r = Object.assign({id:nid('r'), location:'', jobId:'', notes:'', emails:[], tl:[], conns:0}, o);
+  r.updated = r.updated || r.applied;
+  S.records.push(r); flash(r.id);
+  return r;
+}
+function setStage(r, st, by){
+  if (r.status === st) return;
+  r.status = st; r.updated = TODAY; r.heardNo = false;
+  r.tl.push({d:TODAY, t:`Moved to ${st} (${by || 'by you'})`});
+}
+function acceptSugg(s, override){
+  if (s.action === 'update'){
+    const r = rec(s.target);
+    if (r){ r.status = s.newStatus; r.updated = s.date; r.emails.push(s); r.tl.push({d:s.date, t:`${s.label} found in Gmail — moved to ${s.newStatus}`}); flash(r.id); }
+  } else {
+    const d = Object.assign({company:s.company, role:s.role, location:s.location, applied:s.date, status:s.status, via:s.via, jobId:s.jobId}, override || {});
+    addRecord(Object.assign(d, {source:'gmail', emails:[s], tl:[{d:s.date, t:`${s.label} found in Gmail`}]}));
+  }
+  S.sugg = S.sugg.filter(x => x.id !== s.id); S.reviewed++;
+}
+
+const A = {
+  go(d){ S.view = d.v; S.drawer = null; S.modal = null; S.menu = null; S.why = false; window.scrollTo(0,0); render(); },
+  stub(){ toast('This part of LinkedIn isn\'t included in the prototype.'); },
+  closeToast(){ document.getElementById('toast').innerHTML = ''; },
+  openJob(d){ S.view = 'search'; S.job = d.id; S.drawer = null; S.modal = null; S.why = false; S._resetDetail = true; window.scrollTo(0,0); render(); },
+  hideJob(d){ S.hidden.push(d.id); render(); toast('Job dismissed. We\'ll show fewer jobs like this.'); },
+  save(d){ const i = S.saved.indexOf(d.id); i < 0 ? S.saved.push(d.id) : S.saved.splice(i,1); render(); if (i < 0) toast('Job saved to Job tracker.'); },
+  why(){ S.why = !S.why; render(); },
+  premium(){ S.modal = {type:'premium'}; renderOv(); },
+  startTrial(){ S.premium = true; S.modal = null; render(); toast('Premium trial started. Duplicate alerts are on.', {act:'jumpDup', label:'See an example'}); },
+  endTrial(){ S.premium = false; S.modal = null; render(); },
+  protoT(){ S.proto = !S.proto; document.getElementById('proto').innerHTML = proto(); },
+  protoPrem(){ S.premium = !S.premium; render(); toast(S.premium ? 'Viewing as a Premium member.' : 'Viewing as a free member.'); },
+  jumpDup(){ const was = S.premium; S.premium = true; S.suppressed = S.suppressed.filter(x => x !== 'j1'); A.openJob({id:'j1'}); if (!was) toast('Premium turned on for this demo.'); },
+  reset(){ const p = S.proto; S = initial(); S.proto = p; render(); toast('Demo data reset.'); },
+
+  /* tracker */
+  tab(d){ S.tab = d.v; S.menu = null; render(); },
+  menu(d){ S.menu = S.menu === d.id ? null : d.id; render(); },
+  openRec(d){
+    const r = rec(d.id); if (!r) return;
+    if (S.view !== 'tracker'){ S.view = 'tracker'; window.scrollTo(0,0); }
+    if (r.status !== S.tab) S.tab = r.status;
+    S.drawer = d.id; S.modal = null; S.menu = null; render();
+    if (d.note) setTimeout(() => document.getElementById('note')?.focus(), 80);
+  },
+  closeDrawer(){ S.drawer = null; renderOv(); },
+  saveNote(d){ const r = rec(d.id); r.notes = document.getElementById('note').value; render(); toast('Note saved.'); },
+  heardYes(d){ S.modal = {type:'stage', id:d.id, heard:true}; renderOv(); },
+  heardNo(d){ const r = rec(d.id); r.heardNo = true; render(); toast('Got it. We\'ll check in again next week.'); },
+  stageModal(d){ S.menu = null; S.modal = {type:'stage', id:d.id}; render(); },
+  stageSave(d){
+    const st = document.querySelector('input[name="stg"]:checked')?.value; const r = rec(d.id);
+    setStage(r, st); S.modal = null; S.tab = st; flash(r.id); render();
+    toast(`Moved to ${st}.`);
+  },
+  archive(d){ const r = rec(d.id); setStage(r, 'Archived'); S.menu = null; render(); toast('Job archived.', {act:'tab', v:'Archived', label:'View Archived'}); },
+  add(){ S.modal = {type:'edit'}; S.menu = null; renderOv(); setTimeout(() => document.getElementById('e-company')?.focus(), 50); },
+  edit(d){ S.menu = null; S.modal = {type:'edit', id:d.id}; render(); },
+  saveRec(){
+    const g = k => (document.getElementById('e-' + k)?.value || '').trim();
+    const company = g('company'), role = g('role');
+    document.getElementById('f-company').classList.toggle('bad', !company);
+    document.getElementById('f-role').classList.toggle('bad', !role);
+    if (!company || !role) return;
+    const m = S.modal;
+    const via = g('via');
+    const data = {company, role, location:g('location'), applied:g('applied') || TODAY, status:g('status'), via, jobId:g('jobId')};
+    if (m.id){
+      const r = rec(m.id);
+      if (r.status !== data.status) r.tl.push({d:TODAY, t:`Moved to ${data.status} (by you)`});
+      else r.tl.push({d:TODAY, t:'Details edited (by you)'});
+      if (viaShort(r) === via) delete data.via;
+      Object.assign(r, data); r.updated = TODAY;
+      S.modal = null; S.tab = r.status; render(); toast('Job updated.');
+    } else if (m.sid){
+      const s = S.sugg.find(x => x.id === m.sid);
+      acceptSugg(s, data);
+      S.modal = null; render(); toast('Added to Job tracker.');
+    } else {
+      addRecord(Object.assign(data, {source:'manual', notes:g('notes'), tl:[{d:TODAY, t:'Added by you'}], updated:TODAY}));
+      S.modal = null; S.tab = data.status; render(); toast(`${esc(role)} at ${esc(company)} added to Job tracker.`);
+    }
+  },
+  del(d){ const r = rec(d.id); S.menu = null; S.modal = {type:'confirm', title:'Delete job?', text:`This removes <b>${esc(r.role)} at ${esc(r.company)}</b> from your Job tracker. You can't undo this.`, ok:'delOk', okLabel:'Delete', id:d.id}; render(); },
+  delOk(d){ S.records = S.records.filter(r => r.id !== d.id); S.modal = null; S.drawer = null; render(); toast('Job deleted.'); },
+  delAll(){ S.modal = {type:'confirm', title:'Delete all Job tracker data?', text:'This removes every tracked job and suggestion. Your Gmail connection will also be removed.', ok:'delAllOk', okLabel:'Delete all'}; renderOv(); },
+  delAllOk(){ S.records = []; S.sugg = []; S.gmail = false; S.modal = null; S.drawer = null; render(); toast('All Job tracker data deleted.'); },
+  manage(){ S.modal = {type:'manage'}; renderOv(); },
+  toggleAlerts(){ S.alertsOn = !S.alertsOn; render(); },
+  disconnect(){
+    const del = document.getElementById('delImported')?.checked;
+    S.gmail = false; S.sugg = []; S.reviewed = 0;
+    if (del) S.records = S.records.filter(r => r.source !== 'gmail');
+    S.modal = null; render(); toast(del ? 'Gmail disconnected and imported jobs deleted.' : 'Gmail disconnected. Your jobs were kept.');
+  },
+
+  /* gmail flow */
+  gmail(){ if (S.gmail){ A.manage(); return; } S.modal = {type:'gmail', step:'intro'}; renderOv(); },
+  gGoogle(){ S.modal.step = 'google'; renderOv(); },
+  gAllow(){
+    S.modal = {type:'gmail', step:'scan', i:0}; renderOv();
+    [1,2,3].forEach(i => setTimeout(() => { if (S.modal?.step === 'scan'){ S.modal.i = i; renderOv(); } }, i * 850));
+    setTimeout(() => {
+      if (S.modal?.step !== 'scan') return;
+      S.gmail = true; S.synced = 'just now';
+      S.sugg = GMAIL_POOL.filter(s => !(s.action === 'update' && (!rec(s.target) || rec(s.target).status === s.newStatus)) && !S.records.some(r => r.emails.some(e => e.id === s.id))).map(s => ({...s}));
+      S.modal = {type:'gmail', step:'done'}; render();
+    }, 3600);
+  },
+  review(){ S.modal = null; S.view = 'tracker'; S.drawer = null; render(); setTimeout(() => document.getElementById('sugg')?.scrollIntoView({behavior:'smooth', block:'center'}), 60); },
+  sMail(d){ S.openMail[d.id] = !S.openMail[d.id]; render(); },
+  sAccept(d){
+    const s = S.sugg.find(x => x.id === d.id);
+    let ov;
+    if (s.action === 'new' && !s.role){
+      const inp = document.getElementById('sr-' + s.id); const v = inp?.value.trim();
+      if (!v){ inp?.focus(); if (inp) inp.style.boxShadow = '0 0 0 2px #fbd3c5'; toast('Add the job title before accepting.'); return; }
+      ov = {role:v};
+    }
+    acceptSugg(s, ov); render();
+    toast(s.action === 'update' ? `${s.company} moved to ${s.newStatus}.` : `${s.company} added to Job tracker.`, {act:'tab', v:s.newStatus || s.status, label:`View ${s.newStatus || s.status}`});
+  },
+  sEdit(d){ const s = S.sugg.find(x => x.id === d.id); const t = s.action === 'update' ? rec(s.target) : null;
+    S.modal = {type:'edit', sid:s.id, pre:{company:t?t.company:s.company, role:t?t.role:(document.getElementById('sr-'+s.id)?.value || s.role), location:s.location || (t?t.location:''), applied:t?t.applied:s.date, status:s.newStatus || s.status, via:s.via || 'Company website', jobId:s.jobId}}; renderOv(); },
+  sDismiss(d){ S.sugg = S.sugg.filter(x => x.id !== d.id); S.reviewed++; render(); toast('Update dismissed. Nothing was added.'); },
+  acceptAll(){ const hi = S.sugg.filter(s => s.conf === 'hi'); hi.forEach(s => acceptSugg(s)); render(); toast(`${hi.length} updates accepted.`); },
+
+  /* apply flows */
+  easy(d){ S.modal = {type:'easy', id:d.id, step:1}; renderOv(); },
+  easyNext(){ S.modal.step = 2; renderOv(); },
+  easyBack(){ S.modal.step = 1; renderOv(); },
+  easySubmit(){
+    const j = jobById(S.modal.id);
+    const r = addRecord({company:j.company, role:j.title, location:`${j.location} (${j.mode})`, applied:TODAY, posted:j.posted, status:'Applied', source:'easy', via:'LinkedIn Easy Apply', jobId:j.jobId, conns:2, tl:[{d:TODAY, t:'Applied with LinkedIn Easy Apply'}]});
+    S.modal.step = 3; S.modal.rid = r.id; render();
+  },
+  viewNew(){ const id = S.modal.rid; S.modal = null; A.openRec({id}); },
+  ext(d){ S.modal = {type:'ext', id:d.id, step:1}; renderOv(); },
+  extGo(){ S.modal.step = 2; renderOv(); },
+  extYes(){
+    const j = jobById(S.modal.id);
+    const r = addRecord({company:j.company, role:j.title, location:`${j.location} (${j.mode})`, applied:TODAY, status:'Applied', source:'manual', via:`Company website (${j.company} Careers)`, jobId:j.jobId, conns:1, tl:[{d:TODAY, t:'Added after applying on company website'}]});
+    S.modal = null; render(); toast(`Added to Job tracker.`, {act:'openRec', id:r.id, label:'View'});
+  },
+  report(d){ S.modal = {type:'report', id:d.id}; renderOv(); },
+  reportSubmit(d){ S.suppressed.push(d.id); S.modal = null; S.why = false; render(); toast('Thanks for the feedback. We won\'t show this alert for this job again.'); },
+
+  scrim(){ if (S.modal?.step === 'scan') return; S.modal = null; renderOv(); },
+  closeModal(){ S.modal = null; renderOv(); },
+};
+function act(name, data){ (A[name] || (() => {}))(data || {}); }
+
+document.addEventListener('click', e => {
+  const t = e.target;
+  if (S.menu && !t.closest('.menu') && !t.closest('[data-act="menu"]')){
+    S.menu = null; render();
+    if (!t.closest('[data-act]')) return;
+  }
+  const el = t.closest('[data-act]');
+  if (!el) return;
+  if (el.dataset.act === 'scrim' && t !== el) return;
+  const field = t.closest('input,select,textarea,label');
+  if (field && field !== el && el.contains(field)) return;
+  if (el.tagName === 'INPUT') return;
+  e.preventDefault();
+  act(el.dataset.act, {...el.dataset});
+});
+document.addEventListener('change', e => {
+  const el = e.target;
+  if (el.dataset.chg === 'src'){ S.src = el.value; render(); }
+  if (el.dataset.chg === 'check'){ const i = S.checked.indexOf(el.dataset.id); el.checked ? (i < 0 && S.checked.push(el.dataset.id)) : (i >= 0 && S.checked.splice(i,1)); }
+  if (el.dataset.chg === 'all'){ document.querySelectorAll('#tbody .cb').forEach(c => { c.checked = el.checked; c.dispatchEvent(new Event('change', {bubbles:true})); }); }
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape'){
+    if (S.menu){ S.menu = null; render(); }
+    else if (S.modal && S.modal.step !== 'scan'){ S.modal = null; renderOv(); }
+    else if (S.drawer){ S.drawer = null; renderOv(); }
+  }
+});
+render();
+</script>
+</body>
+</html>
